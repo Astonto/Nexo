@@ -70,3 +70,13 @@ class SingleInstance(QObject):
     def close(self):
         self.server.close()
         self.lock.unlock()
+
+
+def create_installation_guard():
+    if os.name != 'nt':
+        return None
+    import ctypes
+    create = ctypes.windll.kernel32.CreateMutexW
+    create.argtypes = [ctypes.c_void_p, ctypes.c_bool, ctypes.c_wchar_p]
+    create.restype = ctypes.c_void_p
+    return create(None, False, 'Nexo.SetupGuard')

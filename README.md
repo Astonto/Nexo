@@ -8,6 +8,7 @@ Record and repeat keyboard and mouse actions on Windows. Nexo includes an autocl
 
 Get the latest build from [Releases](https://github.com/Astonto/Nexo/releases/latest).
 
+- **Installer x64 (-setup.exe):** installs Nexo, adds it to Windows Apps and creates a Start menu shortcut. A desktop shortcut is optional.
 - **Portable x64 (.zip):** extract the folder and open `Nexo.exe`.
 - **Standalone x64 (.exe):** the same application without the ZIP. No installation needed.
 
@@ -50,7 +51,13 @@ Windows accepting a message does not mean the application processed it. Backgrou
 
 ## Your data
 
-Nexo creates a `Nexo-data` folder next to the executable for settings and macros. To update, quit Nexo and replace only the executable. Keep `Nexo-data`. If that location is not writable, Nexo uses `%LOCALAPPDATA%\Nexo`.
+The installed edition saves settings and macros in `%LOCALAPPDATA%\Nexo`, separately for each Windows user. Uninstalling Nexo keeps this folder.
+
+The installer defaults to your user account without requiring administrator rights. You can also choose to install for all users, which requires administrator approval. The default application locations are `%LOCALAPPDATA%\Programs\Nexo` for the current user and `C:\Program Files\Nexo` for all users.
+
+The portable edition creates `Nexo-data` next to the executable. If that location is not writable, it uses `%LOCALAPPDATA%\Nexo`. Keep your data folder when updating; quit Nexo before replacing files or running the installer.
+
+Installing does not move or delete an existing portable data folder. To keep using its macros, select that folder's `macros` subfolder in **Settings → General → Macro folder**. You can also import individual JSON macros from the Library.
 
 By default, the X hides Nexo in the system tray. Use **Quit Nexo** to close it completely. Opening the executable again shows the existing instance.
 
@@ -71,6 +78,14 @@ Run the tests:
 ```
 
 Run `build.bat` to build and check the executable. The result is `dist/Nexo.exe`.
+
+To build the installer, install [Inno Setup 6](https://jrsoftware.org/isdl.php), then run:
+
+```powershell
+.venv\Scripts\python tools\build_installer.py
+```
+
+Use `--compiler` if `ISCC.exe` is in a custom location. The installer is written to `dist/release`. `installer/nexo-installed` tells the installed application to use its user data folder; portable downloads do not include this marker.
 
 ## License
 

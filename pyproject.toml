@@ -1,6 +1,6 @@
 [project]
 name = "nexo"
-version = "1.7.0"
+version = "1.7.1"
 description = "Local macro recorder and autoclicker for Windows"
 license = "MIT"
 requires-python = ">=3.12"

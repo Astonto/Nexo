@@ -15,6 +15,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("executable", type=Path)
     parser.add_argument("--output", type=Path, default=root / "dist" / "release")
+    parser.add_argument("--installer", type=Path)
     args = parser.parse_args()
     data = args.executable.read_bytes()
     if data[:2] != b"MZ":
@@ -37,8 +38,18 @@ def main():
             if path.is_file():
                 package.write(path, "Nexo/licenses/" + path.relative_to(root / "resources" / "licenses").as_posix())
         package.write(root / "resources" / "Inter-OFL.txt", "Nexo/licenses/Inter-OFL.txt")
+    artifacts = [executable, archive]
+    if args.installer:
+        installer = args.installer.resolve(strict=True)
+        expected_name = prefix + '-setup.exe'
+        if installer.name != expected_name:
+            parser.error('The installer filename must match the current version and architecture.')
+        destination = args.output / expected_name
+        if installer != destination.resolve():
+            shutil.copy2(installer, destination)
+        artifacts.append(destination)
     hashes = args.output / "SHA256SUMS.txt"
-    hashes.write_text("".join(hashlib.sha256(path.read_bytes()).hexdigest() + "  " + path.name + "\n" for path in (executable, archive)), encoding="utf-8")
+    hashes.write_text("".join(hashlib.sha256(path.read_bytes()).hexdigest() + "  " + path.name + "\n" for path in artifacts), encoding="utf-8")
     print(executable)
     print(archive)
     print(hashes)

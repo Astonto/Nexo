@@ -38,7 +38,7 @@ def main(argv=None):
     QFontDatabase.addApplicationFont(str(resource_path("Inter.ttf")))
     app.setFont(QFont("Inter", 10))
     app.setWindowIcon(QIcon(str(resource_path("nexo.ico"))))
-    from .single_instance import SingleInstance, instance_name
+    from .single_instance import SingleInstance, instance_name, create_installation_guard
 
     from .config import data_directory
     instance = SingleInstance(instance_name(data_directory() if args.smoke_test else None), app)
@@ -49,6 +49,7 @@ def main(argv=None):
         QMessageBox.warning(None, "Nexo", str(exc))
         return 1
     app.aboutToQuit.connect(instance.close)
+    app._installation_guard = create_installation_guard()
     settings = Settings()
     log = logging.getLogger("macroflow")
     log.setLevel(logging.INFO)
@@ -101,6 +102,7 @@ def main(argv=None):
                       "input_driver_loaded": driver.resolve_key("key:enter") is not None,
                       "product_name": app.applicationName(), "version": __version__, "accent": settings.data["accent"],
                       "language": LANGUAGE, "language_options": window.setting_language.count(),
+                      "data_directory": str(settings.directory.resolve()),
                       "translation_resources": all(resource_path(name).is_file() for name in ("locales/es.json", "locales/qtbase_es.qm")),
                       "qt_translation": LANGUAGE != 'es' or hasattr(app, '_nexo_translator'),
                       "home": window.page_names[0] == tr('Home'), "capture_strip": window.capture_dialog is not None,

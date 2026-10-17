@@ -41,7 +41,7 @@ def main():
         expected = {"window_visible": True, "pages": 7, "icon_loaded": True,
                     "frozen": True, "resources": True, "global_hooks_disabled": True,
                     "privacy_provider_loaded": True, "input_driver_loaded": True,
-                    "product_name": "Nexo", "version": "1.7.0", "accent": "#ff1744", "exit_code": 0,
+                    "product_name": "Nexo", "version": "1.7.1", "accent": "#ff1744", "exit_code": 0,
                     "language": os.environ.get('NEXO_LANGUAGE', 'en'), "language_options": 2,
                     "translation_resources": True, "qt_translation": True,
                     "home": True, "sidebar_pages": 7, "home_message_interval": 7000, "home_message_count": 25,

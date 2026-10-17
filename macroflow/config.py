@@ -1,14 +1,13 @@
 from __future__ import annotations
 from .i18n import tr
 
-import os
 import re
-import sys
 from copy import deepcopy
 from pathlib import Path
 
 from .models import ValidationError, number
 from .storage import atomic_json, read_json
+from .paths import data_directory
 
 DEFAULT_HOTKEYS = {"record_start": "Ctrl+Alt+F6", "record_stop": "Ctrl+Alt+F5", "record_pause": "Ctrl+Alt+F7", "play": "Ctrl+Alt+F8",
                    "stop": "Ctrl+Alt+F9", "click": "Ctrl+Alt+F10", "emergency": "Pause"}
@@ -24,22 +23,6 @@ DEFAULTS = {"theme": "dark", "accent": "#ff1744", "language": "en", "countdown":
             "capture_moves": False, "hotkeys": DEFAULT_HOTKEYS, "last_macro": "", "window_size": [1240, 820],
             "concurrency": "block", "record_mode": "timed", "fixed_interval": 1.0, "sidebar_collapsed": False, "clicker": CLICKER_DEFAULTS,
             "excluded_keys": [{"key": key, "enabled": True} for key in (27, 46, 44, 45, 20)]}
-
-
-def data_directory():
-    override = os.environ.get("NEXO_DATA_DIR") or os.environ.get("MACROFLOW_DATA_DIR")
-    if override:
-        return Path(override).resolve()
-    base = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
-    portable = base / "Nexo-data"
-    try:
-        portable.mkdir(parents=True, exist_ok=True)
-        probe = portable / ".write-check"
-        probe.write_text("", encoding="utf-8")
-        probe.unlink()
-        return portable
-    except OSError:
-        return Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "Nexo"
 
 
 def validate_settings(data):

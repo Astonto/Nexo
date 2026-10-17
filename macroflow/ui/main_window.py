@@ -700,7 +700,7 @@ class MainWindow(QMainWindow):
         self.setting_countdown = spin(0, 30, 3, " s")
         self.setting_speed = spin(0.1, 10, 1, "×", 2)
         self.setting_folder = QLineEdit()
-        self.setting_folder.setPlaceholderText(tr('Default portable folder'))
+        self.setting_folder.setPlaceholderText(tr('Default data folder'))
         self.setting_minimize = combo([(tr('Continue with visible indicator'), "keep"), (tr('Pause the active task'), "pause")])
         self.setting_policy = combo([(tr('Block the second macro'), "block"), (tr('Queue macros · up to 32'), "queue")])
         self.setting_confirm = QCheckBox(tr('Confirm before deleting macros'))

@@ -4,6 +4,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from .paths import data_directory
 
 
 def resource_directory():
@@ -14,22 +15,8 @@ def startup_language():
     override = os.environ.get('NEXO_LANGUAGE')
     if override in ('en', 'es'):
         return override
-    directory = os.environ.get('NEXO_DATA_DIR') or os.environ.get('MACROFLOW_DATA_DIR')
-    if directory:
-        folders = [Path(directory)]
-    else:
-        base = Path(sys.executable).parent if getattr(sys, 'frozen', False) else Path(__file__).resolve().parent.parent
-        portable = base / 'Nexo-data'
-        try:
-            portable.mkdir(parents=True, exist_ok=True)
-            probe = portable / '.language-write-check'
-            probe.write_bytes(b'')
-            probe.unlink()
-            folders = [portable]
-        except OSError:
-            folders = [Path(os.environ.get('LOCALAPPDATA', str(Path.home()))) / 'Nexo']
     try:
-        value = json.loads((folders[0] / 'settings.json').read_text(encoding='utf-8'))
+        value = json.loads((data_directory() / 'settings.json').read_text(encoding='utf-8'))
         if isinstance(value, dict) and value.get('language') in ('en', 'es'):
             return value['language']
     except (OSError, ValueError):

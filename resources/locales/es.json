@@ -664,5 +664,6 @@
   "{0} macros · {1}\nImported files open disabled, with no trigger assigned.": "{0} macros · {1}\nLos archivos importados se abren desactivados y sin activador.",
   "Language changes take effect after restarting Nexo.": "Los cambios de idioma se aplican al reiniciar Nexo.",
   "Preferences saved. Restart Nexo to apply the language.": "Preferencias guardadas. Reinicia Nexo para aplicar el idioma.",
-  "Will be saved to “{0}”.": "Se guardará en «{0}»."
+  "Will be saved to “{0}”.": "Se guardará en «{0}».",
+  "Default data folder": "Carpeta de datos predeterminada"
 }
