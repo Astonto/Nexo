@@ -13,6 +13,7 @@ sys.path.insert(0, str(root))
 from PySide6.QtCore import QEventLoop, QTimer
 from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import QApplication, QTabWidget
+from macroflow.i18n import tr, install_qt_translations
 from macroflow.config import Settings
 from macroflow.models import Event
 from macroflow.ui.main_window import MainWindow
@@ -23,6 +24,7 @@ parser.add_argument("output", type=Path)
 args = parser.parse_args()
 args.output.mkdir(parents=True, exist_ok=True)
 app = QApplication([])
+install_qt_translations(app)
 install_display_text_policy(app)
 QFontDatabase.addApplicationFont(str(root / "resources" / "Inter.ttf"))
 app.setFont(QFont("Inter", 10))
@@ -36,15 +38,15 @@ with tempfile.TemporaryDirectory(prefix="nexo-ui-") as directory:
     window = MainWindow(Settings(directory), enable_hooks=False)
     window.resize(1120, 690)
     window.show()
-    window.new_macro(name="Secuencia de prueba")
+    window.new_macro(name="Example sequence")
     window.editor.insert([Event("move", .25, x=600, y=400), Event("mouse_down", button="left", x=600, y=400),
                           Event("mouse_up", .05, button="left", x=600, y=400), Event("key_down", .4, key="key:ctrl_l"),
                           Event("key_down", .02, key="char:c"), Event("key_up", .02, key="char:c"),
                           Event("key_up", .02, key="key:ctrl_l"), Event("wait", 1)])
-    window.current.category = "Trabajo"
+    window.current.category = "Work"
     window.save_current()
     original = window.current.id
-    for name, category in (("Respuesta rápida", "Trabajo"), ("Secuencia de juego", "Personal"), ("Navegación", "Personal")):
+    for name, category in (("Quick reply", "Work"), ("Game sequence", "Personal"), ("Navigation", "Personal")):
         window.new_macro(name=name)
         window.current.category = category
         window.save_current()
@@ -70,7 +72,7 @@ with tempfile.TemporaryDirectory(prefix="nexo-ui-") as directory:
     window.editor.view_mode.setCurrentIndex(0)
     from macroflow.ui.dialogs import CreateMacroDialog
     wizard = CreateMacroDialog(window)
-    wizard.name.setText("Enviar respuesta")
+    wizard.name.setText("Send reply")
     wizard.show()
     settle()
     wizard.grab().save(str(args.output / "nueva-macro.png"))
@@ -78,7 +80,7 @@ with tempfile.TemporaryDirectory(prefix="nexo-ui-") as directory:
     settle()
     wizard.grab().save(str(args.output / "nueva-macro-acciones.png"))
     wizard.reject()
-    window.capture_dialog.begin("Secuencia de teclado", .05, "Ctrl + Alt + Enter")
+    window.capture_dialog.begin("Keyboard sequence", .05, "Ctrl + Alt + Enter")
     window.capture_dialog.update_events([Event(kind, .05 if kind == "key_down" else 0, key=f"vk:{key}")
                                          for key in [65, 65, 68, 74, 72, 68, 74, 72, 68, 68, 74, 190, 187, 13]
                                          for kind in ("key_down", "key_up")])
@@ -196,7 +198,7 @@ with tempfile.TemporaryDirectory(prefix="nexo-ui-") as directory:
         window.change_page(2)
         window.lock_switch.setChecked(True)
         window.notice.hide()
-        window.playback_panel.update_phase('running', 'Secuencia de prueba')
+        window.playback_panel.update_phase('running', 'Example sequence')
         window.record_indicator.update_phase('running')
         window.capture_dialog.set_phase('running')
         settle(350)
@@ -224,7 +226,7 @@ with tempfile.TemporaryDirectory(prefix="nexo-ui-") as directory:
         window.notice.hide()
         settle()
         window.grab().save(str(args.output / f'autoclicker-teclado-mantener-{name}.png'))
-        click_tabs = next(widget for widget in window.findChildren(QTabWidget) if any(widget.tabText(i) == 'Intervalos y límites' for i in range(widget.count())))
+        click_tabs = next(widget for widget in window.findChildren(QTabWidget) if any(widget.tabText(i) == tr('Intervals and limits') for i in range(widget.count())))
         window.click_ignored_modifiers['ctrl'].setChecked(True)
         click_tabs.setCurrentIndex(2)
         settle()
@@ -245,4 +247,4 @@ with tempfile.TemporaryDirectory(prefix="nexo-ui-") as directory:
         assign.reject()
     window.close()
     app.processEvents()
-print(f"Renderizadas {len(list(args.output.glob('*.png')))} vistas en {args.output}")
+print(f"Rendered {len(list(args.output.glob('*.png')))} views in {args.output}")

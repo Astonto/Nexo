@@ -1,4 +1,4 @@
 Qt for Python 6.11.2: https://code.qt.io/cgit/pyside/pyside-setup.git/tree/?h=v6.11.2
 Qt 6.11.2: https://code.qt.io/cgit/qt/qtbase.git/tree/?h=v6.11.2
 Qt SVG 6.11.2: https://code.qt.io/cgit/qt/qtsvg.git/tree/?h=v6.11.2
-Licencias de Qt: https://doc.qt.io/qt-6/licensing.html
+Qt licenses: https://doc.qt.io/qt-6/licensing.html

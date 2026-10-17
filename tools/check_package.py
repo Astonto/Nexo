@@ -32,7 +32,7 @@ def main():
             subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
                            capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
             process.wait(timeout=10)
-            raise RuntimeError("El ejecutable no terminó la prueba de inicio en 60 segundos.")
+            raise RuntimeError("The executable did not finish the startup test within 60 seconds.")
         report = json.loads(report_file.read_text(encoding="utf-8")) if report_file.exists() else {}
         report["exit_code"] = code
         if args.report:
@@ -41,7 +41,9 @@ def main():
         expected = {"window_visible": True, "pages": 7, "icon_loaded": True,
                     "frozen": True, "resources": True, "global_hooks_disabled": True,
                     "privacy_provider_loaded": True, "input_driver_loaded": True,
-                    "product_name": "Nexo", "version": "1.6.18", "accent": "#ff1744", "exit_code": 0,
+                    "product_name": "Nexo", "version": "1.7.0", "accent": "#ff1744", "exit_code": 0,
+                    "language": os.environ.get('NEXO_LANGUAGE', 'en'), "language_options": 2,
+                    "translation_resources": True, "qt_translation": True,
                     "home": True, "sidebar_pages": 7, "home_message_interval": 7000, "home_message_count": 25,
                     "fixed_countdown_hidden": True, "recording_indicator_size": [460, 76], "recording_indicator_paused": True,
                     "visual_editor": True, "settings_tabs": 3,
@@ -55,9 +57,9 @@ def main():
                     "playback_progress": True}
         failed = [key for key, value in expected.items() if report.get(key) != value]
         if failed:
-            raise RuntimeError(f"Falló la comprobación del paquete: {', '.join(failed)}. {report}")
-        print("Ejecutable verificado: inicio y cierre, siete secciones, recursos y componentes Windows.")
-        print("Prueba aislada sin atajos globales ni entrada simulada en otras aplicaciones.")
+            raise RuntimeError(f"Package check failed: {', '.join(failed)}. {report}")
+        print("Executable checked: startup and shutdown, seven sections, resources and Windows components.")
+        print("Isolated test without global shortcuts or simulated input in other applications.")
     return 0
 
 

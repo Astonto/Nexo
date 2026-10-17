@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .i18n import tr
 
 import json
 import os
@@ -27,11 +28,11 @@ def atomic_json(path: Path, data):
 def read_json(path: Path):
     try:
         if path.stat().st_size > MAX_FILE_BYTES:
-            raise ValidationError("Archivo demasiado grande (máximo 32 MB).")
+            raise ValidationError(tr('File too large (maximum 32 MB).'))
         with path.open("r", encoding="utf-8-sig") as handle:
-            return json.load(handle, parse_constant=lambda _: (_ for _ in ()).throw(ValidationError("Número JSON no válido.")))
+            return json.load(handle, parse_constant=lambda _: (_ for _ in ()).throw(ValidationError(tr('Invalid JSON number.'))))
     except (json.JSONDecodeError, UnicodeError, RecursionError) as exc:
-        raise ValidationError("El archivo JSON está dañado o tiene una estructura inválida.") from exc
+        raise ValidationError(tr('The JSON file is damaged or has an invalid structure.')) from exc
 
 
 class Library:
@@ -46,7 +47,7 @@ class Library:
         try:
             canonical = str(UUID(macro_id))
         except (ValueError, TypeError, AttributeError) as exc:
-            raise ValidationError("Identificador inválido.") from exc
+            raise ValidationError(tr('Invalid identifier.')) from exc
         return self.folder / f"{canonical}.json"
 
     def all(self):
@@ -56,7 +57,7 @@ class Library:
             try:
                 macro = Macro.from_dict(read_json(path))
                 if self.path_for(macro.id).name != path.name:
-                    raise ValidationError("El identificador no coincide con el archivo.")
+                    raise ValidationError(tr('The identifier does not match the file.'))
                 macros.append(macro)
             except (OSError, ValidationError):
                 self.errors.append(path.name)
@@ -73,7 +74,7 @@ class Library:
     def duplicate(self, macro):
         duplicate = Macro.from_dict(macro.to_dict())
         duplicate.id = str(uuid4())
-        duplicate.name = macro.name[:110] + " — copia"
+        duplicate.name = macro.name[:110] + tr(' — copy')
         duplicate.trigger = ""
         duplicate.enabled = False
         self.save(duplicate)

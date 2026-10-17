@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .i18n import tr
 
 import ctypes
 import os
@@ -85,7 +86,7 @@ class InputTarget:
         import time
         from .models import ValidationError
         if not self.hwnd:
-            raise ValidationError("Selecciona una ventana para usar Activar ventana.")
+            raise ValidationError(tr('Select a target window to use Activate window.'))
         api = api or ctypes.WinDLL('user32', use_last_error=True)
         api.IsWindow.argtypes = [wintypes.HWND]
         api.IsIconic.argtypes = [wintypes.HWND]
@@ -99,10 +100,10 @@ class InputTarget:
             return api.IsWindow(self.hwnd) and pid.value == self.pid
         control.wait()
         if not valid():
-            raise ValidationError("La ventana de destino se cerró o cambió. Selecciónala otra vez.")
+            raise ValidationError(tr('The target window closed or changed. Select it again.'))
         def ask_windows():
             if not valid():
-                raise ValidationError("La ventana de destino se cerró o cambió.")
+                raise ValidationError(tr('The target window closed or changed.'))
             logging.getLogger("macroflow.activation").info("activation_request target=%s pid=%s foreground_before=%s", self.hwnd, self.pid, api.GetForegroundWindow())
 
             api.ShowWindowAsync(self.hwnd, 9 if api.IsIconic(self.hwnd) else 5)
@@ -116,12 +117,12 @@ class InputTarget:
         while True:
             control.wait()
             if not valid():
-                raise ValidationError("La ventana de destino se cerró durante la activación.")
+                raise ValidationError(tr('The target window closed during activation.'))
             if api.GetForegroundWindow() == self.hwnd and not api.IsIconic(self.hwnd):
                 return
             if time.monotonic() >= deadline:
                 logging.getLogger("macroflow.activation").warning("activation_timeout target=%s foreground=%s", self.hwnd, api.GetForegroundWindow())
-                raise ValidationError("Windows no permitió activar la ventana. Actívala manualmente y vuelve a iniciar; no se enviaron entradas.")
+                raise ValidationError(tr('Windows did not allow window activation. Activate it manually and try again; no input was sent.'))
             control.wait(.02)
 
     def allows(self, event=None):
@@ -192,28 +193,28 @@ class PrivacyProbe:
             module = comtypes.client.GetModule("UIAutomationCore.dll")
             self.automation = comtypes.client.CreateObject("{ff48dba4-60ef-4201-aa87-54103eef594e}", interface=module.IUIAutomation)
         except Exception:
-            self.reason = "Protección de campos no disponible; teclado omitido."
+            self.reason = tr('Field protection unavailable; keyboard input skipped.')
 
     def allowed(self):
         if foreground_process() == os.getpid():
-            self.reason = "Controles de Nexo excluidos."
+            self.reason = tr('Nexo controls excluded.')
             return False
         if self.automation is None:
-            self.reason = "No se puede verificar el campo; teclado omitido."
+            self.reason = tr('Could not verify the field; keyboard input skipped.')
             return False
         try:
             focused = self.automation.GetFocusedElement()
             if not focused:
-                self.reason = "Sin campo verificable; teclado omitido."
+                self.reason = tr('No verifiable field; keyboard input skipped.')
                 return False
             password = focused.GetCurrentPropertyValue(30019)
             if password is None or bool(password):
-                self.reason = "Campo protegido; teclado omitido."
+                self.reason = tr('Protected field; keyboard input skipped.')
                 return False
             self.reason = ""
             return True
         except Exception:
-            self.reason = "No se puede verificar el campo; teclado omitido."
+            self.reason = tr('Could not verify the field; keyboard input skipped.')
             return False
 
     def close(self):

@@ -1,59 +1,62 @@
 # Nexo
 
-Nexo sirve para grabar y repetir acciones de teclado y ratón en Windows. También incluye un autoclicker y un editor para ajustar cada paso sin tener que grabar todo de nuevo.
+Record and repeat keyboard and mouse actions on Windows. Nexo includes an autoclicker and a sequence editor, so you can adjust individual steps without recording everything again.
 
-![Nexo en modo oscuro](docs/images/inicio.png)
+![Nexo in dark mode](docs/images/home.png)
 
-## Descargar
+## Download
 
-Las descargas están en [Releases](https://github.com/Astonto/Nexo/releases).
+Get the latest build from [Releases](https://github.com/Astonto/Nexo/releases/latest).
 
-- **Portable x64 (.zip):** descomprime la carpeta y abre `Nexo.exe`.
-- **Ejecutable x64 (.exe):** es la misma aplicación, sin el ZIP. No necesita instalación.
+- **Portable x64 (.zip):** extract the folder and open `Nexo.exe`.
+- **Standalone x64 (.exe):** the same application without the ZIP. No installation needed.
 
-Funciona en Windows 10 y 11 de 64 bits. No hace falta instalar Python.
+Requires 64-bit Windows 10 or 11. You do not need Python to run the downloads.
 
-Por ahora no hay versión de 32 bits: la versión de PySide6 que usa Nexo no tiene paquetes oficiales para Windows x86.
+There is no 32-bit build: the PySide6 version used by Nexo does not provide official Windows x86 packages.
 
-## Qué puedes hacer
+## Features
 
-- Grabar teclado y ratón, y editar los tiempos de cada acción.
-- Organizar macros por categorías y asignarles un atajo.
-- Reproducir una vez, repetir o mantener pulsado un activador.
-- Repetir clics o teclas con intervalos desde 1 ms.
-- Ignorar Ctrl, Alt, Shift o Windows al usar el activador del repetidor de teclado.
-- Cambiar entre tema claro y oscuro, y elegir el color de acento.
+- Record keyboard and mouse input, then edit the timing of each action.
+- Organize macros by category and assign global shortcuts.
+- Run a sequence once, hold a trigger to repeat, or press again to stop.
+- Repeat clicks or keystrokes with intervals starting at 1 ms.
+- Ignore Ctrl, Alt, Shift or Windows when using the keyboard repeater's hold trigger.
+- Choose a light or dark theme and your own accent color.
+- Use the full interface in English or Spanish.
 
-El intervalo configurado no garantiza una frecuencia exacta: también cuentan la duración de la pulsación, Windows y la aplicación que recibe la entrada.
+The interval setting is not a guarantee of exact timing. Key press duration, Windows scheduling and the target application also affect the actual rate.
 
-## Uso rápido
+## Getting started
 
-1. Crea una macro y entra en **Grabar**.
-2. Selecciona la ventana que quieres grabar o deja toda la pantalla.
-3. Graba las acciones, detén la captura y guarda.
-4. En **Macros**, elige cómo ejecutarla. Puedes cambiar el atajo desde **Configurar**.
+1. Create a macro and open **Record**.
+2. Select the window to record, or leave the target set to the entire screen.
+3. Record your actions, stop capture and save.
+4. Open **Macros** and choose how to play it. Use **Configure** to assign a shortcut.
 
-Los controles de grabación, reproducción, autoclicker y parada de emergencia se pueden cambiar en **Configuración → Atajos**. Conviene revisar esa lista antes de empezar.
+Recording, playback, autoclicker and emergency stop shortcuts can be changed in **Settings → Shortcuts**. Check them before starting.
 
-El interruptor sobre la versión bloquea toda la automatización. Al activarlo, se detiene lo que esté ejecutándose.
+The switch above the version number locks all automation. Turning it on stops the current task.
 
-## Ventana de destino
+To change the language, open **Settings → General**, choose **English** or **Español**, and press **Save preferences**. Quit Nexo and open it again to apply the change. Existing Spanish settings are kept; new installations start in English.
 
-- **Segundo plano:** envía mensajes de Windows a la ventana elegida sin activarla. Algunas aplicaciones los ignoran.
-- **Con foco:** ejecuta mientras la ventana elegida está activa. Si pierde el foco, se detiene.
-- **Activar ventana:** intenta restaurar y traer el destino al frente antes de ejecutar. Si Windows no permite activarlo, no envía entradas.
+## Target windows
 
-Que Windows acepte un mensaje no significa que la aplicación lo haya procesado. El modo de segundo plano no es compatible con todos los programas o juegos.
+- **Background:** sends Windows messages to the selected window without activating it. Some applications ignore these messages.
+- **Focused:** runs while the selected window is active. Playback stops if it loses focus.
+- **Activate window:** tries to restore the target and bring it to the front before running. If Windows refuses activation, no input is sent.
 
-## Dónde se guarda todo
+Windows accepting a message does not mean the application processed it. Background mode does not work with every program or game.
 
-Nexo crea una carpeta `Nexo-data` junto al ejecutable. Ahí guarda los ajustes y las macros. Para actualizar, cierra Nexo y reemplaza solamente el ejecutable; conserva esa carpeta. Si la ubicación no permite escritura, utiliza `%LOCALAPPDATA%\Nexo`.
+## Your data
 
-La X oculta la ventana en la bandeja de forma predeterminada. Para cerrar la aplicación por completo, usa **Salir de Nexo**. Abrir el ejecutable otra vez muestra la instancia que ya estaba abierta.
+Nexo creates a `Nexo-data` folder next to the executable for settings and macros. To update, quit Nexo and replace only the executable. Keep `Nexo-data`. If that location is not writable, Nexo uses `%LOCALAPPDATA%\Nexo`.
 
-## Ejecutar desde el código
+By default, the X hides Nexo in the system tray. Use **Quit Nexo** to close it completely. Opening the executable again shows the existing instance.
 
-Necesitas Windows y Python 3.12 o superior, de 64 bits.
+## Run from source
+
+Requires Windows and 64-bit Python 3.12 or newer.
 
 ```powershell
 py -3 -m venv .venv
@@ -61,14 +64,16 @@ py -3 -m venv .venv
 .venv\Scripts\python main.py
 ```
 
-Para ejecutar las pruebas:
+Run the tests:
 
 ```powershell
 .venv\Scripts\python -m pytest -q
 ```
 
-Para generar y comprobar el ejecutable, ejecuta `build.bat`. El resultado queda en `dist/Nexo.exe`.
+Run `build.bat` to build and check the executable. The result is `dist/Nexo.exe`.
 
-## Dependencias
+## License
 
-Hecho con Python, PySide6, pynput y comtypes. Los créditos y licencias están en [THIRD_PARTY.md](THIRD_PARTY.md) y `resources/licenses`.
+Nexo's own code is released under the [MIT license](LICENSE). You can use, modify and share it while keeping the copyright and license notice.
+
+Built with Python, PySide6, pynput and comtypes. Dependency credits and licenses are listed in [THIRD_PARTY.md](THIRD_PARTY.md) and `resources/licenses`.

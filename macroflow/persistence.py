@@ -1,5 +1,6 @@
-
 from __future__ import annotations
+from .i18n import tr
+
 
 import copy
 import threading
@@ -45,7 +46,7 @@ class SaveService:
                 with self.condition:
                     self.failed.add(macro.id)
                     self.failed_snapshots[macro.id] = macro
-                self.notify("warning", {"message": "No se pudo guardar una macro. Revisa el espacio y los permisos de la carpeta; exporta una copia antes de cerrar."})
+                self.notify("warning", {"message": tr('Could not save a macro. Check disk space and folder permissions; export a copy before closing.')})
             finally:
                 with self.condition:
                     self.writing = False

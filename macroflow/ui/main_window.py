@@ -1,4 +1,5 @@
 from __future__ import annotations
+from ..i18n import tr
 
 import copy
 import os
@@ -39,7 +40,7 @@ from .editor import Editor
 from .theme import icon, stylesheet
 from .widgets import BrandButton, NavigationButton, LibraryDelegate, LibraryTable, LockSwitch, ThemedButton, button, card, combo, duration_text, label, row, spin
 
-MODE_LABELS = {"once": "Una pulsación", "hold": "Mantener", "toggle": "Alternar"}
+MODE_LABELS = {"once": tr('Single press'), "hold": tr('Hold'), "toggle": tr('Toggle')}
 
 
 class Bridge(QObject):
@@ -151,7 +152,7 @@ class MainWindow(QMainWindow):
         marker.layout().setContentsMargins(15, 5, 0, 0)
         side.addWidget(marker)
         side.addSpacing(34)
-        self.page_names = ["Inicio", "Grabar", "Macros", "Autoclicker", "Editor", "Biblioteca", "Configuración"]
+        self.page_names = [tr('Home'), tr('Record'), "Macros", "Autoclicker", "Editor", tr('Library'), tr('Settings')]
         symbols = ["home", "record", "macros", "click", "edit", "library", "settings"]
         self.nav = []
         for index, (name, symbol) in enumerate(zip(self.page_names, symbols)):
@@ -166,10 +167,10 @@ class MainWindow(QMainWindow):
             side.addWidget(self.nav[index])
         side.addWidget(self.nav[3])
         side.addStretch()
-        self.status_badge = label("Listo", "sidebarStatus")
+        self.status_badge = label(tr('Ready'), "sidebarStatus")
         self.status_badge.setWordWrap(True)
-        self.stop_all = button("Detener todo", self.emergency, symbol="stop")
-        self.stop_all.setToolTip("Parada de emergencia: detiene las tareas y libera las entradas")
+        self.stop_all = button(tr('Stop all'), self.emergency, symbol="stop")
+        self.stop_all.setToolTip(tr('Emergency stop: stops tasks and releases held inputs'))
         self.emergency_label = label(display_binding(self.settings.data["hotkeys"]["emergency"]), "eyebrow")
         side.addWidget(self.status_badge)
         self.status_badge.hide()
@@ -186,10 +187,10 @@ class MainWindow(QMainWindow):
         content = QVBoxLayout(self.workspace)
         content.setContentsMargins(52, 42, 52, 28)
         content.setSpacing(18)
-        self.breadcrumb = label("NEXO  /  INICIO", "eyebrow")
+        self.breadcrumb = label(tr('NEXO  /  HOME'), "eyebrow")
         self.breadcrumb.setParent(self.workspace)
         self.breadcrumb.hide()
-        self.title = label("Inicio", "pageTitle")
+        self.title = label(tr('Home'), "pageTitle")
         self.subtitle = label("", "muted", True)
         content.addWidget(self.title)
         content.addWidget(self.subtitle)
@@ -199,24 +200,24 @@ class MainWindow(QMainWindow):
         self.current_combo.setMinimumWidth(160)
         self.current_combo.setMaximumWidth(320)
         self.current_combo.activated.connect(lambda i: self.select_macro(self.current_combo.itemData(i)))
-        self.new_button = button("Nueva", self.new_macro, symbol="plus")
-        self.save_button = button("Guardar", self.save_current, symbol="save")
-        self.config_macro_button = button("Configurar", self.configure_macro, symbol="settings")
+        self.new_button = button(tr('New'), self.new_macro, symbol="plus")
+        self.save_button = button(tr('Save'), self.save_current, symbol="save")
+        self.config_macro_button = button(tr('Configure'), self.configure_macro, symbol="settings")
         self.macro_toolbar = row(self.current_combo, None, self.new_button, self.config_macro_button, self.save_button)
         content.addWidget(self.macro_toolbar)
-        self.target_combo = combo([("Toda la pantalla · entrada global", None)])
+        self.target_combo = combo([(tr('Entire screen · global input'), None)])
         self.target_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         self.target_combo.setMinimumContentsLength(28)
         self.target_combo.setMaximumWidth(420)
         self.target_combo.currentIndexChanged.connect(self.select_input_target)
-        self.target_refresh = button("Actualizar ventanas", self.refresh_targets)
-        self.target_label = label("Destino", "muted")
+        self.target_refresh = button(tr('Refresh windows'), self.refresh_targets)
+        self.target_label = label(tr('Target'), "muted")
         self.target_row = row(self.target_label, self.target_combo, self.target_refresh, None)
-        self.target_row.setToolTip("Elige una ventana para dirigirle la reproducción y el autoclicker; el modo de envío se configura debajo.")
+        self.target_row.setToolTip(tr('Choose a window for playback and the autoclicker; set the input mode below.'))
         content.addWidget(self.target_row)
-        self.target_delivery = combo([("Segundo plano · mensajes Windows", "background"),
-                                      ("Con foco · compatibilidad", "foreground"),
-                                      ("Activar ventana · traer al frente", "activate")])
+        self.target_delivery = combo([(tr('Background · Windows messages'), "background"),
+                                      (tr('Focused · compatibility'), "foreground"),
+                                      (tr('Activate window · bring to front'), "activate")])
         self.target_delivery.currentIndexChanged.connect(self.select_input_target)
         self.target_note = label("", "muted", True)
         self.target_options = row(self.target_delivery, self.target_note)
@@ -238,19 +239,19 @@ class MainWindow(QMainWindow):
         self.update_record_options()
         self.update_click_options()
         self.statusBar().setSizeGripEnabled(False)
-        self.statusBar().showMessage("Listo · Guardado automático activado")
+        self.statusBar().showMessage(tr('Ready · Autosave enabled'))
         self.statusBar().hide()
 
     def refresh_targets(self):
         previous = self.target_combo.currentData()
         self.target_combo.blockSignals(True)
         self.target_combo.clear()
-        self.target_combo.addItem("Toda la pantalla · entrada global", None)
+        self.target_combo.addItem(tr('Entire screen · global input'), None)
         for hwnd, pid, title in application_windows():
             self.target_combo.addItem(title, (hwnd, pid))
         index = self.target_combo.findData(previous)
         if previous is not None and index < 0:
-            self.target_combo.addItem("Ventana cerrada · elige otro destino", previous)
+            self.target_combo.addItem(tr('Window closed · choose another target'), previous)
             index = self.target_combo.count() - 1
         self.target_combo.setCurrentIndex(max(0, index))
         self.target_combo.blockSignals(False)
@@ -261,8 +262,8 @@ class MainWindow(QMainWindow):
         self.engine.input_target = InputTarget(*target) if target else None
         self.engine.input_delivery = self.target_delivery.currentData()
         background = self.engine.input_delivery == "background"
-        self.target_note.setText("Si Segundo plano no funciona, este modo restaura la ventana y la trae al frente para ejecutar. Debe permanecer activa; si cambias de ventana, la ejecución se detiene." if self.engine.input_delivery == "activate" else "No cambia tu ventana activa. Algunas apps y juegos ignoran estos mensajes." if background else
-                                 "El destino debe estar al frente. Al cambiar de ventana, se detiene la ejecución.")
+        self.target_note.setText(tr('If Background mode does not work, this mode restores the window and brings it to the front before running. It must stay active; switching windows stops playback.') if self.engine.input_delivery == "activate" else tr('Keeps your current window active. Some apps and games ignore these messages.') if background else
+                                 tr('The target must be in front. Switching windows stops playback.'))
         self.target_note.setMinimumHeight(self.target_note.fontMetrics().lineSpacing() * 5 if self.engine.input_delivery == "activate" else 0)
         self.target_options.setMinimumHeight(self.target_note.minimumHeight())
         self.target_note.setToolTip(self.target_note.text())
@@ -305,7 +306,7 @@ class MainWindow(QMainWindow):
         summary_layout = QVBoxLayout(summary)
         summary_layout.setContentsMargins(0, 8, 0, 8)
         summary_layout.setSpacing(8)
-        self.record_target_label = label("Selecciona una macro para grabar.", "muted", True)
+        self.record_target_label = label(tr('Select a macro to record.'), "muted", True)
         self.record_target_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         self.record_target_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         summary_layout.addWidget(self.record_target_label)
@@ -313,7 +314,7 @@ class MainWindow(QMainWindow):
         self.record_timer = label("00:00:00.000", "timer")
         self.record_timer.setStyleSheet("font-size:40px; padding:6px 0;")
         self.record_timer.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.record_count = label("0 eventos registrados", "muted")
+        self.record_count = label(tr('0 recorded events'), "muted")
         self.record_count.setAlignment(Qt.AlignmentFlag.AlignCenter)
         summary_layout.addWidget(self.record_timer)
         summary_layout.addWidget(self.record_count)
@@ -323,8 +324,8 @@ class MainWindow(QMainWindow):
         capture_layout = QVBoxLayout(capture)
         capture_layout.setContentsMargins(0, 8, 0, 8)
         capture_layout.setSpacing(8)
-        capture_layout.addWidget(label("MODO DE CAPTURA", "eyebrow"))
-        self.record_mode = combo([("Tiempo real · teclado y ratón", "timed"), ("Pulsaciones · intervalo fijo", "fixed")])
+        capture_layout.addWidget(label(tr('CAPTURE MODE'), "eyebrow"))
+        self.record_mode = combo([(tr('Real time · keyboard and mouse'), "timed"), (tr('Keystrokes · fixed interval'), "fixed")])
         self.record_mode.setCurrentIndex(self.record_mode.findData(self.settings.data["record_mode"]))
         capture_layout.addWidget(self.record_mode)
         self.record_options = QWidget()
@@ -335,29 +336,29 @@ class MainWindow(QMainWindow):
         form.setVerticalSpacing(8)
         self.fixed_interval = spin(0.01, 86400, self.settings.data["fixed_interval"], " s", 3)
         self.fixed_interval_row = row(self.fixed_interval)
-        form.addRow("Intervalo fijo", self.fixed_interval_row)
+        form.addRow(tr('Fixed interval'), self.fixed_interval_row)
         self.fixed_interval_label = form.labelForField(self.fixed_interval_row)
-        self.capture_moves = QCheckBox("Incluir movimientos del cursor")
+        self.capture_moves = QCheckBox(tr('Include cursor movements'))
         self.capture_moves.setChecked(self.settings.data["capture_moves"])
         form.addRow(self.capture_moves)
         self.record_countdown = spin(0, 30, self.settings.data["countdown"], " s")
         self.record_countdown_row = row(self.record_countdown)
-        form.addRow("Cuenta regresiva", self.record_countdown_row)
+        form.addRow(tr('Countdown'), self.record_countdown_row)
         self.record_countdown_label = form.labelForField(self.record_countdown_row)
         capture_layout.addWidget(self.record_options)
         capture_layout.addStretch()
         overview.addWidget(capture, 0, 1)
         layout.addLayout(overview)
-        self.record_start = button("Iniciar grabación", self.start_recording, symbol="record", primary=True)
-        self.record_pause = button("Pausar", self.pause_task, symbol="pause")
-        self.record_stop = button("Terminar y guardar", self.stop_task, symbol="stop")
+        self.record_start = button(tr('Start recording'), self.start_recording, symbol="record", primary=True)
+        self.record_pause = button(tr('Pause'), self.pause_task, symbol="pause")
+        self.record_stop = button(tr('Finish and save'), self.stop_task, symbol="stop")
         controls = QHBoxLayout()
         controls.setSpacing(12)
         for control in (self.record_start, self.record_pause, self.record_stop):
             control.setProperty("recordControl", True)
             controls.addWidget(control, 1)
         layout.addLayout(controls)
-        self.record_privacy = label("Los atajos de control y los clics en Nexo no se guardan.", "muted", True)
+        self.record_privacy = label(tr('Control shortcuts and clicks inside Nexo are excluded.'), "muted", True)
         self.record_privacy.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.record_privacy)
         layout.addSpacing(8)
@@ -365,13 +366,13 @@ class MainWindow(QMainWindow):
         divider.setObjectName("divider")
         divider.setFixedHeight(1)
         layout.addWidget(divider)
-        layout.addWidget(row(label("ATAJOS DE GRABACIÓN", "eyebrow"), None,
-                             button("Editar atajos", lambda: self.open_settings_tab(1), symbol="settings")))
+        layout.addWidget(row(label(tr('RECORDING SHORTCUTS'), "eyebrow"), None,
+                             button(tr('Edit shortcuts'), lambda: self.open_settings_tab(1), symbol="settings")))
         self.record_hotkey_fields = {}
         shortcuts = QGridLayout()
         shortcuts.setHorizontalSpacing(12)
         shortcuts.setVerticalSpacing(6)
-        for column, (action, caption) in enumerate((("record_start", "Iniciar"), ("record_pause", "Pausar"), ("record_stop", "Detener"))):
+        for column, (action, caption) in enumerate((("record_start", tr('Start')), ("record_pause", tr('Pause')), ("record_stop", tr('Stop')))):
             field = ShortcutField(self.settings.data["hotkeys"][action])
             self.record_hotkey_fields[action] = field
             field.setToolTip(HOTKEY_LABELS[action])
@@ -424,46 +425,40 @@ class MainWindow(QMainWindow):
         detail.setContentsMargins(0, 0, 0, 0)
         detail.setSpacing(8)
         layout.addWidget(surface)
-        self.player_name = label("Selecciona una macro", "sectionTitle", True)
+        self.player_name = label(tr('Select a macro'), "sectionTitle", True)
         self.player_meta = label("", "muted", True)
         for item in (self.player_name, self.player_meta):
             item.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         detail.addWidget(self.player_name)
         detail.addWidget(self.player_meta)
-        self.player_action = label("Sin acciones", "currentAction", True)
+        self.player_action = label(tr('No actions'), "currentAction", True)
         self.player_action.setStyleSheet("font-size:17px; padding:12px;")
         self.player_action.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         detail.addWidget(self.player_action)
-        help_text = ("<qt><table width='320' cellspacing='0' cellpadding='0'><tr><td>"
-                     "<b>Cómo leer la secuencia</b><br><br>"
-                     "El número indica la posición de la acción.<br>"
-                     "Pulsar y Soltar son acciones distintas.<br>"
-                     "Up significa flecha arriba.<br><br>"
-                     "La barra inferior muestra las acciones completadas."
-                     "</td></tr></table></qt>")
+        help_text = (tr("<qt><table width='320' cellspacing='0' cellpadding='0'><tr><td><b>Reading the sequence</b><br><br>The number shows the action's position.<br>Press and Release are separate actions.<br>Up means the up arrow key.<br><br>The bar below shows completed actions.</td></tr></table></qt>"))
         self.player_action.setToolTip(help_text)
         help_button = button("?")
         help_button.setFixedWidth(32)
-        help_button.setAccessibleName("Ayuda del reproductor")
+        help_button.setAccessibleName(tr('Player help'))
         help_button.setToolTip(help_text)
         help_button.clicked.connect(lambda: QToolTip.showText(help_button.mapToGlobal(help_button.rect().bottomLeft()), help_text, help_button))
-        self.macro_toggle = button("Activar atajo", self.toggle_current_macro)
+        self.macro_toggle = button(tr('Enable shortcut'), self.toggle_current_macro)
         options = QWidget()
         form = QFormLayout(options)
         form.setContentsMargins(0, 8, 12, 8)
         form.setVerticalSpacing(12)
         self.play_speed = spin(0.1, 10, self.settings.data["speed"], "×", 2)
         self.play_repetitions = spin(1, 10_000_000, 1)
-        self.play_continuous = QCheckBox("Repetir hasta detener")
+        self.play_continuous = QCheckBox(tr('Repeat until stopped'))
         self.play_continuous.toggled.connect(lambda checked: self.play_repetitions.setEnabled(not checked))
         self.play_countdown = spin(0, 30, self.settings.data["countdown"], " s")
-        form.addRow("Velocidad", self.play_speed)
-        form.addRow("Repeticiones", row(self.play_repetitions, self.play_continuous, None))
-        form.addRow("Cuenta regresiva", self.play_countdown)
-        self.play_options_toggle = button("Opciones de reproducción")
+        form.addRow(tr('Speed'), self.play_speed)
+        form.addRow(tr('Repeats'), row(self.play_repetitions, self.play_continuous, None))
+        form.addRow(tr('Countdown'), self.play_countdown)
+        self.play_options_toggle = button(tr('Playback options'))
         self.play_options_toggle.setCheckable(True)
         self.play_options_toggle.toggled.connect(options.setVisible)
-        detail.addWidget(row(button("Editar secuencia", lambda: self.change_page(4), symbol="edit"),
+        detail.addWidget(row(button(tr('Edit sequence'), lambda: self.change_page(4), symbol="edit"),
                              self.macro_toggle, self.play_options_toggle, help_button, None))
         detail.addWidget(options)
         options.hide()
@@ -471,24 +466,24 @@ class MainWindow(QMainWindow):
         self.progress.setRange(0, 100)
         self.progress.setValue(0)
         self.progress.setTextVisible(False)
-        self.progress.setToolTip("Progreso de acciones de la repetición actual")
+        self.progress.setToolTip(tr('Action progress for the current repeat'))
         layout.addWidget(self.progress)
-        self.play_progress = label("Sin reproducción activa", "muted", True)
+        self.play_progress = label(tr('Nothing playing'), "muted", True)
         layout.addWidget(self.play_progress)
-        self.play_start = button("Reproducir", self.start_playback, symbol="play", primary=True)
-        self.play_pause = button("Pausar", self.pause_task, symbol="pause")
-        self.play_stop = button("Detener", self.stop_task, symbol="stop")
+        self.play_start = button(tr('Play'), self.start_playback, symbol="play", primary=True)
+        self.play_pause = button(tr('Pause'), self.pause_task, symbol="pause")
+        self.play_stop = button(tr('Stop'), self.stop_task, symbol="stop")
         previous = button("‹", lambda: self.engine.seek(-1))
         following = button("›", lambda: self.engine.seek(1))
-        for control, name in ((previous, "Acción anterior"), (following, "Acción siguiente")):
+        for control, name in ((previous, tr('Previous action')), (following, tr('Next action'))):
             control.setFixedWidth(34)
             control.setAccessibleName(name)
             control.setToolTip(name)
         self.play_navigation = row(previous, following,
-                                   button("Reiniciar", lambda: self.engine.seek(restart=True)), None)
+                                   button(tr('Restart'), lambda: self.engine.seek(restart=True)), None)
         layout.addWidget(row(self.play_start, self.play_pause, self.play_stop, self.play_navigation, None))
-        self.queue_label = label("Cola vacía", "muted")
-        layout.addWidget(row(self.queue_label, None, button("Vaciar cola", self.clear_queue)))
+        self.queue_label = label(tr('Queue empty'), "muted")
+        layout.addWidget(row(self.queue_label, None, button(tr('Clear queue'), self.clear_queue)))
         layout.addStretch()
 
     def build_clicker(self):
@@ -508,66 +503,66 @@ class MainWindow(QMainWindow):
             scroll.setWidget(widget)
             tabs.addTab(scroll, title)
             return form
-        form = tab("Acción")
-        self.click_kind = combo([("Ratón", "mouse"), ("Teclado", "keyboard")])
+        form = tab(tr('Action'))
+        self.click_kind = combo([(tr('Mouse'), "mouse"), (tr('Keyboard'), "keyboard")])
         self.repeat_key = ShortcutField("V")
-        self.repeat_key_button = button("Asignar tecla", lambda: self.assign_record_control(self.repeat_key))
-        form.addRow("Dispositivo", self.click_kind)
+        self.repeat_key_button = button(tr('Assign key'), lambda: self.assign_record_control(self.repeat_key))
+        form.addRow(tr('Device'), self.click_kind)
         self.click_key_row = row(self.repeat_key, self.repeat_key_button)
-        form.addRow("Tecla a repetir", self.click_key_row)
+        form.addRow(tr('Key to repeat'), self.click_key_row)
         self.click_key_label = form.labelForField(self.click_key_row)
         self.keyboard_hold_button = ShortcutField()
-        self.keyboard_hold_button.setPlaceholderText('Sin asignar')
-        self.keyboard_hold_assign = button('Asignar', self.assign_hold_binding)
-        self.keyboard_hold_clear = button('Quitar', lambda: self.keyboard_hold_button.setText(''))
+        self.keyboard_hold_button.setPlaceholderText(tr('Not assigned'))
+        self.keyboard_hold_assign = button(tr('Assign'), self.assign_hold_binding)
+        self.keyboard_hold_clear = button(tr('Remove'), lambda: self.keyboard_hold_button.setText(''))
         self.keyboard_hold_row = row(self.keyboard_hold_button, self.keyboard_hold_assign, self.keyboard_hold_clear)
-        form.addRow('Mantener pulsado', self.keyboard_hold_row)
+        form.addRow(tr('Hold to repeat'), self.keyboard_hold_row)
         self.keyboard_hold_label = form.labelForField(self.keyboard_hold_row)
-        self.keyboard_hold_hint = label('Mantén la tecla, combinación o botón del ratón asignado para repetir. Suéltalo para detener. Sin cuenta regresiva; respeta los intervalos y límites.', 'muted', True)
+        self.keyboard_hold_hint = label(tr('Hold the assigned key, combination or mouse button to repeat. Release it to stop. Starts without a countdown and follows the interval and limits.'), 'muted', True)
         form.addRow(self.keyboard_hold_hint)
-        self.click_button = combo([("Izquierdo", "left"), ("Derecho", "right"), ("Central", "middle"), ("Lateral X1", "x1"), ("Lateral X2", "x2")])
-        self.click_double = QCheckBox("Doble clic")
+        self.click_button = combo([(tr('Left'), "left"), (tr('Right'), "right"), (tr('Middle'), "middle"), (tr('Side button X1'), "x1"), (tr('Side button X2'), "x2")])
+        self.click_double = QCheckBox(tr('Double-click'))
         self.click_mouse_row = row(self.click_button, self.click_double, None)
-        form.addRow("Botón", self.click_mouse_row)
+        form.addRow(tr('Button'), self.click_mouse_row)
         self.click_mouse_label = form.labelForField(self.click_mouse_row)
-        self.click_position = combo([("Posición actual del cursor", "current"), ("Coordenadas personalizadas", "fixed")])
-        form.addRow("Posición", self.click_position)
+        self.click_position = combo([(tr('Current cursor position'), "current"), (tr('Custom coordinates'), "fixed")])
+        form.addRow(tr('Position'), self.click_position)
         self.click_position_label = form.labelForField(self.click_position)
         self.click_x, self.click_y = spin(-1_000_000, 1_000_000, 0), spin(-1_000_000, 1_000_000, 0)
-        self.pick_button = button("Seleccionar en pantalla", self.pick_position)
+        self.pick_button = button(tr('Pick on screen'), self.pick_position)
         self.coordinates_row = row(self.click_x, self.click_y, self.pick_button)
         form.addRow("X / Y", self.coordinates_row)
         self.coordinates_label = form.labelForField(self.coordinates_row)
         self.click_position.currentIndexChanged.connect(self.update_click_options)
-        form = tab("Intervalos y límites")
+        form = tab(tr('Intervals and limits'))
         self.interval_hours, self.interval_minutes, self.interval_seconds, self.interval_ms = spin(0, 24, 0, " h"), spin(0, 59, 0, " min"), spin(0, 59, 0, " s"), spin(0, 999, 100, " ms")
-        form.addRow("Intervalo", row(self.interval_hours, self.interval_minutes, self.interval_seconds, self.interval_ms))
-        self.variable_interval = QCheckBox("Intervalo aleatorio hasta")
+        form.addRow(tr('Interval'), row(self.interval_hours, self.interval_minutes, self.interval_seconds, self.interval_ms))
+        self.variable_interval = QCheckBox(tr('Random interval up to'))
         self.interval_max = spin(0.001, 90000, 0.5, " s", 3)
-        form.addRow("Variación", row(self.variable_interval, self.interval_max))
+        form.addRow(tr('Variation'), row(self.variable_interval, self.interval_max))
         self.click_repetitions = spin(1, 10_000_000, 100)
-        self.click_infinite = QCheckBox("Sin límite")
+        self.click_infinite = QCheckBox(tr('Unlimited'))
         self.click_infinite.toggled.connect(lambda checked: self.click_repetitions.setEnabled(not checked))
-        form.addRow("Repeticiones", row(self.click_repetitions, self.click_infinite, None))
+        form.addRow(tr('Repeats'), row(self.click_repetitions, self.click_infinite, None))
         self.click_duration = spin(0, 604800, 0, " s", 2)
-        form.addRow("Duración máxima", self.click_duration)
-        self.click_duration.setToolTip("0 = sin límite de tiempo")
+        form.addRow(tr('Maximum duration'), self.click_duration)
+        self.click_duration.setToolTip(tr('0 = no time limit'))
         self.click_countdown = spin(0, 30, self.settings.data["countdown"], " s")
-        form.addRow("Cuenta regresiva", self.click_countdown)
-        form.addRow(label("Intervalo mínimo: 1 ms. El ritmo real depende del sistema y del destino. Duración 0 = sin límite.", "muted", True))
-        form = tab("Exclusiones")
-        form.addRow(label("Ignorar modificadores del activador", "sectionTitle"))
-        form.addRow(label("Se aplica a Mantener pulsado del modo Teclado. Puedes usar estas teclas mientras mantienes el activador, sin cambiar la combinación ni detener la repetición. No bloquea esas teclas en el juego ni modifica los otros atajos.", "muted", True))
+        form.addRow(tr('Countdown'), self.click_countdown)
+        form.addRow(label(tr('Minimum interval: 1 ms. Actual timing depends on the system and target. Duration 0 = unlimited.'), "muted", True))
+        form = tab(tr('Exclusions'))
+        form.addRow(label(tr('Ignore trigger modifiers'), "sectionTitle"))
+        form.addRow(label(tr('Applies to Hold to repeat in Keyboard mode. You can use these keys while holding the trigger without changing the combination or stopping repeats. It does not block those keys in the game or change other shortcuts.'), "muted", True))
         self.click_ignored_modifiers = {}
         for modifier, title in (("ctrl", "Ctrl"), ("alt", "Alt"), ("shift", "Shift"), ("win", "Windows")):
             checkbox = QCheckBox(title)
             self.click_ignored_modifiers[modifier] = checkbox
             form.addRow(checkbox)
-        form.addRow(label("Si el activador incluye explícitamente un modificador, seguirá siendo necesario mantenerlo. Los demás atajos exactos tienen prioridad.", "muted", True))
-        self.click_stats = label("0 repeticiones", "muted")
+        form.addRow(label(tr('Modifiers explicitly included in the trigger are still required. Other exact shortcuts take priority.'), "muted", True))
+        self.click_stats = label(tr('0 repeats'), "muted")
         layout.addWidget(self.click_stats)
-        self.click_start = button("Iniciar", self.start_clicker, symbol="play", primary=True)
-        self.click_stop = button("Detener", self.stop_task, symbol="stop")
+        self.click_start = button(tr('Start'), self.start_clicker, symbol="play", primary=True)
+        self.click_stop = button(tr('Stop'), self.stop_task, symbol="stop")
         layout.addWidget(row(self.click_start, self.click_stop, None))
         self.clicker_fields = {"kind": self.click_kind, "button": self.click_button, "double": self.click_double,
                                "position": self.click_position, "x": self.click_x, "y": self.click_y, "key": self.repeat_key,
@@ -626,7 +621,7 @@ class MainWindow(QMainWindow):
             self.configure_router(self.macros.values(), self.router_controls())
         except ValidationError as exc:
             self.keyboard_hold_button.setText('')
-            self.show_notice(str(exc) + ' Asigna otro activador para mantener pulsado.', warning=True)
+            self.show_notice(str(exc) + tr(' Assign a different hold trigger.'), warning=True)
 
     def assign_hold_binding(self):
         if not self.require_idle():
@@ -637,13 +632,13 @@ class MainWindow(QMainWindow):
 
     def build_editor(self):
         _, layout = self.page(False)
-        self.macro_summary = label("Crea una macro para comenzar.", "muted", True)
+        self.macro_summary = label(tr('Create a macro to get started.'), "muted", True)
         layout.addWidget(self.macro_summary)
         self.editor = Editor()
         self.editor.model.changed.connect(self.events_changed)
         layout.addWidget(self.editor, 1)
-        self.play_selection = button("Reproducir selección", lambda: self.start_playback(True), symbol="play")
-        layout.addWidget(row(label("Tiempo = espera antes de cada acción.", "muted"), None, self.play_selection))
+        self.play_selection = button(tr('Play selection'), lambda: self.start_playback(True), symbol="play")
+        layout.addWidget(row(label(tr('Time = delay before each action.'), "muted"), None, self.play_selection))
 
     def style_table(self, table):
         table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
@@ -659,8 +654,8 @@ class MainWindow(QMainWindow):
     def build_library(self):
         _, layout = self.page(False)
         self.search = QLineEdit()
-        self.search.setPlaceholderText("Buscar por nombre, atajo o categoría…")
-        self.category_filter = combo([("Todas las categorías", "")])
+        self.search.setPlaceholderText(tr('Search by name, shortcut or category…'))
+        self.category_filter = combo([(tr('All categories'), "")])
         self.search.textChanged.connect(self.filter_library)
         self.category_filter.currentIndexChanged.connect(self.filter_library)
         layout.addWidget(row(self.search, self.category_filter))
@@ -668,7 +663,7 @@ class MainWindow(QMainWindow):
         self.library_table.setMouseTracking(True)
         self.library_table.setObjectName('libraryTable')
         self.library_table.setItemDelegate(LibraryDelegate(self.library_table))
-        self.library_table.setHorizontalHeaderLabels(["Nombre", "Atajo", "Modo", "Duración", "Acciones", "Estado", "Categoría", "Modificación", "ID"])
+        self.library_table.setHorizontalHeaderLabels([tr('Name'), tr('Shortcut'), tr('Mode'), tr('Duration'), tr('Actions'), tr('Status'), tr('Category'), tr('Modified'), "ID"])
         self.library_table.setColumnHidden(8, True)
         self.style_table(self.library_table)
         self.library_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
@@ -677,11 +672,11 @@ class MainWindow(QMainWindow):
         self.library_table.horizontalHeader().setSectionResizeMode(7, QHeaderView.ResizeMode.Stretch)
         self.library_table.cellDoubleClicked.connect(lambda r, c: self.open_library_selection())
         layout.addWidget(self.library_table, 1)
-        self.library_actions = row(button("Editar", self.open_library_selection), button("Ver en Macros", self.open_library_player),
-                                   button("Duplicar", self.duplicate_macro), button("Eliminar", self.delete_macro, danger=True), None)
+        self.library_actions = row(button(tr('Edit'), self.open_library_selection), button(tr('View in Macros'), self.open_library_player),
+                                   button(tr('Duplicate'), self.duplicate_macro), button(tr('Delete'), self.delete_macro, danger=True), None)
         layout.addWidget(self.library_actions)
-        layout.addWidget(row(button("Importar JSON", self.import_macro), button("Exportar JSON", self.export_macro), None,
-                              button("Abrir carpeta", self.open_macro_folder)))
+        layout.addWidget(row(button(tr('Import JSON'), self.import_macro), button(tr('Export JSON'), self.export_macro), None,
+                              button(tr('Open folder'), self.open_macro_folder)))
         self.library_info = label("", "muted", True)
         layout.addWidget(self.library_info)
 
@@ -696,47 +691,49 @@ class MainWindow(QMainWindow):
             scroll.setWidgetResizable(True)
             scroll.setWidget(widget)
             self.settings_tabs.addTab(scroll, title)
-        appearance, content = card("Preferencias de la aplicación")
+        appearance, content = card(tr('Application preferences'))
         form = QFormLayout()
-        self.setting_theme = combo([("Oscuro", "dark"), ("Claro", "light")])
+        self.setting_theme = combo([(tr('Dark'), "dark"), (tr('Light'), "light")])
+        self.setting_language = combo([("English", "en"), ("Español", "es")])
         self.setting_accent = QLineEdit()
         self.setting_accent.setMaximumWidth(130)
         self.setting_countdown = spin(0, 30, 3, " s")
         self.setting_speed = spin(0.1, 10, 1, "×", 2)
         self.setting_folder = QLineEdit()
-        self.setting_folder.setPlaceholderText("Carpeta portable predeterminada")
-        self.setting_minimize = combo([("Continuar con indicador visible", "keep"), ("Pausar la tarea activa", "pause")])
-        self.setting_policy = combo([("Bloquear la segunda macro", "block"), ("Poner macros en cola · máximo 32", "queue")])
-        self.setting_confirm = QCheckBox("Confirmar antes de eliminar macros")
-        self.setting_close = QCheckBox('Ocultar en la bandeja al cerrar')
-        for name, widget in (("Tema", self.setting_theme), ("Color de acento", row(self.setting_accent, button("Elegir color", self.choose_accent), None)),
-                              ("Idioma", label("Español")), ("Cuenta regresiva predeterminada", self.setting_countdown),
-                              ("Velocidad predeterminada", self.setting_speed),
-                              ("Carpeta de macros", row(self.setting_folder, button("Examinar", self.choose_macro_folder))),
-                              ("Al minimizar", self.setting_minimize), ("Cuando otra macro esté activa", self.setting_policy)):
+        self.setting_folder.setPlaceholderText(tr('Default portable folder'))
+        self.setting_minimize = combo([(tr('Continue with visible indicator'), "keep"), (tr('Pause the active task'), "pause")])
+        self.setting_policy = combo([(tr('Block the second macro'), "block"), (tr('Queue macros · up to 32'), "queue")])
+        self.setting_confirm = QCheckBox(tr('Confirm before deleting macros'))
+        self.setting_close = QCheckBox(tr('Hide to tray on close'))
+        for name, widget in ((tr('Theme'), self.setting_theme), (tr('Accent color'), row(self.setting_accent, button(tr('Choose color'), self.choose_accent), None)),
+                              (tr('Language'), self.setting_language), (tr('Default countdown'), self.setting_countdown),
+                              (tr('Default speed'), self.setting_speed),
+                              (tr('Macro folder'), row(self.setting_folder, button(tr('Browse'), self.choose_macro_folder))),
+                              (tr('When minimized'), self.setting_minimize), (tr('When another macro is running'), self.setting_policy)):
             form.addRow(name, widget)
         content.addLayout(form)
+        content.addWidget(label(tr("Language changes take effect after restarting Nexo."), "muted", True))
         content.addWidget(self.setting_confirm)
         content.addWidget(self.setting_close)
-        content.addWidget(label('La X oculta Nexo junto al reloj. Usa su icono para mostrarlo o salir.', 'muted', True))
-        content.addWidget(label("La cola ejecuta una macro cada vez. Las tareas de grabación y autoclicker bloquean otras automatizaciones.", "muted", True))
+        content.addWidget(label(tr('The X hides Nexo next to the clock. Use its tray icon to show it or quit.'), 'muted', True))
+        content.addWidget(label(tr('The queue runs one macro at a time. Recording and autoclicker tasks block other automation.'), "muted", True))
         section(appearance, "General")
-        shortcuts, content = card("Atajos globales", "Los activadores individuales se asignan en Configurar macro. Aquí se reservan los controles de la aplicación.")
+        shortcuts, content = card(tr('Global shortcuts'), tr("Assign individual triggers in Configure macro. This section reserves the application's controls."))
         form = QFormLayout()
         self.setting_hotkeys = {}
         for action, title in HOTKEY_LABELS.items():
             field = ShortcutField()
             self.setting_hotkeys[action] = field
-            form.addRow(title, row(field, button("Asignar atajo", lambda checked=False, target=field: self.assign_record_control(target))))
+            form.addRow(title, row(field, button(tr('Assign shortcut'), lambda checked=False, target=field: self.assign_record_control(target))))
         content.addLayout(form)
-        content.addWidget(label("Pulsa Asignar atajo y la combinación deseada; por ejemplo, Ctrl+Enter o Ctrl+Alt+Enter. Esc cancela. Los conflictos se comprueban antes de aplicar los cambios.", "muted", True))
-        section(shortcuts, "Atajos")
-        exclusions, content = card("Teclas excluidas de la grabación")
+        content.addWidget(label(tr('Press Assign shortcut, then your combination, such as Ctrl+Enter or Ctrl+Alt+Enter. Esc cancels. Conflicts are checked before applying changes.'), "muted", True))
+        section(shortcuts, tr('Shortcuts'))
+        exclusions, content = card(tr('Keys excluded from recording'))
         self.restrictions = RecordingRestrictions(self)
         content.addWidget(self.restrictions)
-        section(exclusions, "Exclusiones")
-        layout.addWidget(row(button("Guardar preferencias", self.save_settings, primary=True),
-                              button("Restaurar valores", self.restore_settings), None, button('Salir de Nexo', self.request_exit)))
+        section(exclusions, tr('Exclusions'))
+        layout.addWidget(row(button(tr('Save preferences'), self.save_settings, primary=True),
+                              button(tr('Restore defaults'), self.restore_settings), None, button(tr('Quit Nexo'), self.request_exit)))
         self.hook_status = label("", "notice", True)
         layout.addWidget(self.hook_status)
         self.load_settings_fields()
@@ -745,6 +742,7 @@ class MainWindow(QMainWindow):
         data = data or self.settings.data
         self.restrictions.load(data["excluded_keys"])
         self.setting_theme.setCurrentIndex(self.setting_theme.findData(data["theme"]))
+        self.setting_language.setCurrentIndex(self.setting_language.findData(data["language"]))
         self.setting_accent.setText(data["accent"])
         self.setting_countdown.setValue(data["countdown"])
         self.setting_speed.setValue(data["speed"])
@@ -782,7 +780,7 @@ class MainWindow(QMainWindow):
         self.side_brand.style().polish(self.side_brand)
         self.brand_marker.setVisible(not collapsed)
         self.version_label.setVisible(True)
-        caption = "Mostrar barra lateral" if collapsed else "Ocultar barra lateral"
+        caption = tr('Show sidebar') if collapsed else tr('Hide sidebar')
         self.side_brand.setToolTip("")
         self.side_brand.setAccessibleName(caption)
         for item, name in zip(self.nav, self.page_names):
@@ -838,17 +836,17 @@ class MainWindow(QMainWindow):
         self.subtitle.setVisible(index != 0)
         self.macro_toolbar.setVisible(index in (1, 2, 4))
         self.new_button.setVisible(index in (1, 2))
-        self.new_button.setText("Nueva macro")
-        self.target_label.setText("Ventana a grabar" if index == 1 else "Destino")
-        self.target_row.setToolTip("Solo registra entradas mientras la ventana elegida está activa." if index == 1 else "Elige la ventana donde se ejecutará la automatización.")
+        self.new_button.setText(tr('New macro'))
+        self.target_label.setText(tr('Window to record') if index == 1 else tr('Target'))
+        self.target_row.setToolTip(tr('Only records input while the selected window is active.') if index == 1 else tr('Choose the window where automation will run.'))
         self.target_row.setVisible(index in (1, 2, 3))
         self.target_options.setVisible(index in (2, 3) and self.target_combo.currentData() is not None)
         self.save_button.setVisible(index == 4)
-        self.config_macro_button.setText("Atajo y ejecución" if index == 4 else "Configurar")
-        descriptions = ["", "Captura una secuencia a tu ritmo.",
-                        "Tu macro, lista para ejecutarse.", "Repite clics o teclas con tus intervalos.",
-                        "Construye y ajusta cada acción.", "Encuentra y organiza tus secuencias.",
-                        "Haz que Nexo funcione a tu manera."]
+        self.config_macro_button.setText(tr('Shortcut and playback') if index == 4 else tr('Configure'))
+        descriptions = ["", tr('Capture a sequence at your own pace.'),
+                        tr('Your macro, ready to run.'), tr('Repeat clicks or keys at your own interval.'),
+                        tr('Build and fine-tune every action.'), tr('Find and organize your sequences.'),
+                        tr('Make Nexo work your way.')]
         self.subtitle.setText(descriptions[index])
         self.statusBar().hide()
         if hasattr(self, "editor"):
@@ -856,27 +854,27 @@ class MainWindow(QMainWindow):
 
     def refresh_player(self, index=0):
         macro = self.macros.get(self.engine.active_id) if self.engine.task == "play" else self.current
-        self.player_name.setText(macro.name if macro else "Selecciona una macro")
-        self.macro_toggle.setText("Desactivar atajo" if macro and macro.enabled else "Activar atajo")
+        self.player_name.setText(macro.name if macro else tr('Select a macro'))
+        self.macro_toggle.setText(tr('Disable shortcut') if macro and macro.enabled else tr('Enable shortcut'))
         self.macro_toggle.setEnabled(bool(macro) and not self.engine.busy)
         if macro:
-            self.player_meta.setText(f"{len(macro.events)} acciones · {macro.duration:g} s · {MODE_LABELS[macro.activation]} · {display_binding(macro.trigger) or 'Sin atajo'}")
+            self.player_meta.setText(tr('{0} actions · {1:g} s · {2} · {3}', len(macro.events), macro.duration, MODE_LABELS[macro.activation], display_binding(macro.trigger) or tr('No shortcut')))
             if macro.events:
                 from .sequence import describe_event
                 action = max(0, min(index, len(macro.events) - 1))
-                prefix = "Acción actual" if self.engine.task == "play" else "Primera acción"
+                prefix = tr('Current action') if self.engine.task == "play" else tr('First action')
                 self.player_action.setText(f"{prefix} · {action + 1:02d}   {describe_event(macro.events[action])}")
             else:
-                self.player_action.setText("Aún no hay acciones. Graba una secuencia o abre el editor.")
+                self.player_action.setText(tr('No actions yet. Record a sequence or open the editor.'))
         else:
-            self.player_meta.setText("Crea una macro para comenzar.")
-            self.player_action.setText("Sin acciones")
+            self.player_meta.setText(tr('Create a macro to get started.'))
+            self.player_action.setText(tr('No actions'))
         if self.engine.task != "play":
             self.progress.setValue(0)
-            self.play_progress.setText("Listo para reproducir · La barra avanzará al ejecutar la macro")
+            self.play_progress.setText(tr('Ready to play · Progress will update when the macro runs'))
 
     def show_notice(self, text, warning=False):
-        if not text or text.startswith(("Guardado automáticamente", "Cambios pendientes", "Listo ·")):
+        if not text or text.startswith((tr('Saved automatically'), tr('Unsaved changes'), tr('Ready ·'))):
             return
         self.notice.attach(self.capture_dialog if self.capture_dialog.isVisible() else self)
         self.notice.show_message(text, warning)
@@ -886,7 +884,7 @@ class MainWindow(QMainWindow):
 
     def start_hooks(self):
         if not self.enable_hooks:
-            self.hook_status.setText("Modo de pruebas sin captura global.")
+            self.hook_status.setText(tr('Test mode without global capture.'))
             return
         try:
             validate_bindings(self.macros.values(), self.router_controls())
@@ -894,26 +892,26 @@ class MainWindow(QMainWindow):
 
             for macro in self.macros.values():
                 macro.enabled, macro.trigger = False, ""
-            self.show_error(str(exc) + " Los activadores se deshabilitaron en esta sesión para que puedas revisarlos.")
+            self.show_error(str(exc) + tr(' Triggers were disabled for this session so you can review them.'))
         self.configure_router(self.macros.values(), self.router_controls())
         try:
             self.start_hotkeys(self.settings.data["hotkeys"])
             self.hotkeys_ok = True
         except ValidationError as exc:
             self.hotkeys_ok = False
-            self.show_error(str(exc) + " La automatización estará bloqueada hasta corregir los atajos.")
+            self.show_error(str(exc) + tr(' Automation will remain blocked until the shortcuts are fixed.'))
         try:
             self.router.start()
             self.router_ok = True
         except Exception:
             self.router_ok = False
-            self.show_error("No se pudieron iniciar los controles globales. La automatización está bloqueada.")
-        self.hook_status.setText("Controles globales disponibles. Las entradas inyectadas no activan macros." if self.hotkeys_ok and self.router_ok else "Revisa los atajos antes de automatizar.")
+            self.show_error(tr('Could not start global controls. Automation is blocked.'))
+        self.hook_status.setText(tr('Global controls available. Injected input does not trigger macros.') if self.hotkeys_ok and self.router_ok else tr('Check your shortcuts before running automation.'))
         self.home.refresh()
         if self.settings.warning:
             self.show_error(self.settings.warning)
         if self.library.errors:
-            self.show_error(f"Se omitieron {len(self.library.errors)} archivos dañados. Se conservaron en la carpeta para que puedas recuperarlos.")
+            self.show_error(tr('Skipped {0} damaged files. They were kept in the folder so you can recover them.', len(self.library.errors)))
 
     def native_macro_bindings(self):
         if self.engine.input_delivery != 'activate' or not self.engine.enabled or foreground_process() == os.getpid():
@@ -1007,7 +1005,7 @@ class MainWindow(QMainWindow):
                 if not self.validate_coordinates(macro, interactive=False):
                     return
                 result = self.engine.trigger(macro)
-                statuses = {"blocked": "Otra tarea está activa; macro bloqueada.", "queued": "Macro añadida a la cola.", "queue_full": "La cola está llena.", "unqueued": "Macro retirada de la cola."}
+                statuses = {"blocked": tr('Another task is running; macro blocked.'), "queued": tr('Macro added to queue.'), "queue_full": tr('The queue is full.'), "unqueued": tr('Macro removed from queue.')}
                 if result in statuses:
                     self.statusBar().showMessage(statuses[result], 5000)
                     if result in ("blocked", "queue_full"):
@@ -1017,13 +1015,13 @@ class MainWindow(QMainWindow):
 
     def automation_ready(self):
         if not self.engine.enabled:
-            self.show_notice('Nexo está bloqueado. Desactiva el switch sobre la versión para continuar.')
+            self.show_notice(tr('Nexo is locked. Turn off the switch above the version number to continue.'))
             return False
         if not self.hotkeys_ok or not self.router_ok:
-            self.show_error("Configura una parada de emergencia disponible antes de iniciar tareas.")
+            self.show_error(tr('Set an available emergency stop shortcut before starting tasks.'))
             return False
         if self.picking:
-            self.show_error("Termina la selección de posición antes de iniciar una tarea.")
+            self.show_error(tr('Finish picking a position before starting a task.'))
             return False
         return True
 
@@ -1041,11 +1039,11 @@ class MainWindow(QMainWindow):
                 self.hotkeys_ok = False
                 self.show_error(str(exc))
         self.sync_state()
-        self.show_notice('Nexo bloqueado: automatización y atajos desactivados.' if locked else 'Nexo desbloqueado: automatización disponible.')
+        self.show_notice(tr('Nexo locked: automation and shortcuts disabled.') if locked else tr('Nexo unlocked: automation available.'))
 
     def require_idle(self):
         if self.engine.busy:
-            self.statusBar().showMessage("Detén la tarea actual antes de modificar la biblioteca.", 4000)
+            self.statusBar().showMessage(tr('Stop the current task before changing the library.'), 4000)
             return False
         return True
 
@@ -1053,21 +1051,21 @@ class MainWindow(QMainWindow):
         self.current_combo.blockSignals(True)
         self.current_combo.clear()
         if not self.macros:
-            self.current_combo.addItem("Sin macros · crea una nueva", None)
+            self.current_combo.addItem(tr('No macros · create one'), None)
         for macro in sorted(self.macros.values(), key=lambda m: m.name.lower()):
             self.current_combo.addItem(icon("library"), macro.name, macro.id)
         if self.current:
             self.current_combo.setCurrentIndex(self.current_combo.findData(self.current.id))
-            self.macro_summary.setText(f"{self.current.name}  ·  {self.current.category}  ·  Atajo: {display_binding(self.current.trigger) or 'sin asignar'}  ·  {MODE_LABELS[self.current.activation]}  ·  {'Activada' if self.current.enabled else 'Desactivada'}")
+            self.macro_summary.setText(tr('{0}  ·  {1}  ·  Shortcut: {2}  ·  {3}  ·  {4}', self.current.name, self.current.category, display_binding(self.current.trigger) or tr('not assigned'), MODE_LABELS[self.current.activation], tr('Enabled') if self.current.enabled else tr('Disabled')))
         else:
-            self.macro_summary.setText("Crea una macro para añadir acciones.")
+            self.macro_summary.setText(tr('Create a macro to add actions.'))
         self.current_combo.blockSignals(False)
-        self.record_target_label.setText("Grabación para " + self.current.name if self.current else "Se creará una nueva macro al grabar.")
+        self.record_target_label.setText(tr('Recording for ') + self.current.name if self.current else tr('Recording will create a new macro.'))
         self.refresh_player()
         self.editor.refresh_summary()
         if self.engine.task != "record":
             self.record_timer.setText(duration_text(self.current.duration if self.current else 0))
-            self.record_count.setText(f"{len(self.current.events) if self.current else 0} acciones en la macro seleccionada")
+            self.record_count.setText(tr('{0} actions in the selected macro', len(self.current.events) if self.current else 0))
         self.sync_state()
 
     def select_macro(self, identifier):
@@ -1133,7 +1131,7 @@ class MainWindow(QMainWindow):
         self.current.modified = now_iso()
         self.home.refresh()
         self.refresh_player()
-        self.statusBar().showMessage("Cambios pendientes de guardado…")
+        self.statusBar().showMessage(tr('Unsaved changes…'))
         self.autosave_timer.start()
 
     def save_current(self):
@@ -1154,7 +1152,7 @@ class MainWindow(QMainWindow):
             except ValueError:
                 modified = "—"
             values = [macro.name, display_binding(macro.trigger) or "—", MODE_LABELS[macro.activation], f"{macro.duration:.2f} s", str(len(macro.events)),
-                      "Activada" if macro.enabled else "Desactivada", macro.category, modified, macro.id]
+                      tr('Enabled') if macro.enabled else tr('Disabled'), macro.category, modified, macro.id]
             for c, value in enumerate(values):
                 self.library_table.setItem(r, c, QTableWidgetItem(value))
             if macro.id == selected_id:
@@ -1162,13 +1160,13 @@ class MainWindow(QMainWindow):
         previous = self.category_filter.currentData()
         self.category_filter.blockSignals(True)
         self.category_filter.clear()
-        self.category_filter.addItem("Todas las categorías", "")
+        self.category_filter.addItem(tr('All categories'), "")
         for category in sorted({macro.category for macro in macros}):
             self.category_filter.addItem(category, category)
         self.category_filter.setCurrentIndex(max(0, self.category_filter.findData(previous)))
         self.category_filter.blockSignals(False)
         self.filter_library()
-        self.library_info.setText(f"{len(macros)} macros · {self.library.folder}\nLos archivos importados se abren desactivados y sin activador.")
+        self.library_info.setText(tr("{0} macros · {1}\nImported files open disabled, with no trigger assigned.", len(macros), self.library.folder))
         self.home.refresh()
 
     def filter_library(self):
@@ -1254,12 +1252,12 @@ class MainWindow(QMainWindow):
         if not identifier or not self.require_idle():
             return
         if self.settings.data["confirm_delete"]:
-            result = QMessageBox.question(self, "Eliminar macro", f"¿Eliminar «{self.macros[identifier].name}» de la biblioteca?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+            result = QMessageBox.question(self, tr('Delete macro'), tr('Delete “{0}” from the library?', self.macros[identifier].name), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
             if result != QMessageBox.StandardButton.Yes:
                 return
         self.autosave_timer.stop()
         if not self.writer.flush():
-            self.show_error("Hay un guardado pendiente o fallido. No se eliminó la macro.")
+            self.show_error(tr('A save is pending or failed. The macro was not deleted.'))
             return
         try:
             self.library.delete(identifier)
@@ -1271,19 +1269,19 @@ class MainWindow(QMainWindow):
             self.refresh_current()
             self.refresh_library()
         except OSError:
-            self.show_error("No se pudo eliminar el archivo. Revisa sus permisos.")
+            self.show_error(tr('Could not delete the file. Check its permissions.'))
 
     def import_macro(self):
         if not self.require_idle():
             return
-        path, _ = QFileDialog.getOpenFileName(self, "Importar macro", "", "Nexo JSON (*.json)")
+        path, _ = QFileDialog.getOpenFileName(self, tr('Import macro'), "", "Nexo JSON (*.json)")
         if path:
             try:
                 macro = self.library.import_file(path)
                 self.macros[macro.id] = macro
                 self.select_macro(macro.id)
                 self.refresh_library()
-                self.statusBar().showMessage("Macro importada y validada. Activador desactivado.", 6000)
+                self.statusBar().showMessage(tr('Macro imported and validated. Trigger disabled.'), 6000)
             except (OSError, ValidationError) as exc:
                 self.show_error(str(exc))
 
@@ -1291,11 +1289,11 @@ class MainWindow(QMainWindow):
         identifier = self.library_selection() or (self.current.id if self.current else None)
         if not identifier:
             return
-        path, _ = QFileDialog.getSaveFileName(self, "Exportar macro", "macro.json", "Nexo JSON (*.json)")
+        path, _ = QFileDialog.getSaveFileName(self, tr('Export macro'), "macro.json", "Nexo JSON (*.json)")
         if path:
             try:
                 self.library.export_file(self.macros[identifier], path)
-                self.statusBar().showMessage("Macro exportada.", 4000)
+                self.statusBar().showMessage(tr('Macro exported.'), 4000)
             except (OSError, ValidationError) as exc:
                 self.show_error(str(exc))
 
@@ -1306,21 +1304,21 @@ class MainWindow(QMainWindow):
         if not self.automation_ready() or not self.require_idle():
             return
         if self.current is None:
-            self.new_macro(name="Grabación " + datetime.now().strftime("%d-%m %H.%M.%S"))
+            self.new_macro(name=tr('Recording ') + datetime.now().strftime("%d-%m %H.%M.%S"))
         self.save_current()
 
         if not self.writer.flush():
-            self.show_error("No se pudo guardar la macro antes de grabar.")
+            self.show_error(tr('Could not save the macro before recording.'))
             return
         if self.current.events:
             try:
                 self.library.export_file(self.current, self.settings.directory / "recovery" / f"{self.current.id}.json")
             except OSError:
-                self.show_error("No se pudo guardar la copia de recuperación. Revisa el espacio disponible.")
+                self.show_error(tr('Could not save the recovery copy. Check available disk space.'))
                 return
         self.record_target = self.current.id
         self.record_timer.setText("00:00:00.000")
-        self.record_count.setText("0 eventos registrados")
+        self.record_count.setText(tr('0 recorded events'))
         self.settings.data["record_mode"] = self.record_mode.currentData()
         self.settings.data["fixed_interval"] = self.fixed_interval.value()
         self.settings.data["capture_moves"] = self.capture_moves.isChecked()
@@ -1339,14 +1337,14 @@ class MainWindow(QMainWindow):
         pointer_events = [e for e in macro.events if e.x is not None]
         rectangles = monitor_rects()
         if rectangles and any(not any(l <= e.x < r and t <= e.y < b for l, t, r, b in rectangles) for e in pointer_events):
-            message = "La macro contiene coordenadas fuera de los monitores actuales. Corrígelas en el editor."
+            message = tr('The macro contains coordinates outside the current monitors. Fix them in the editor.')
             self.show_error(message) if interactive else self.statusBar().showMessage(message, 8000)
             return False
         if pointer_events and macro.display_signature and macro.display_signature != monitor_rects():
             if not interactive:
-                self.statusBar().showMessage("Cambió la distribución de monitores. Revisa y ejecuta la macro desde Reproductor.", 8000)
+                self.statusBar().showMessage(tr('The monitor layout changed. Review the macro and run it from the player.'), 8000)
                 return False
-            answer = QMessageBox.question(self, "Pantallas diferentes", "La disposición o resolución de los monitores cambió. ¿Has revisado las coordenadas y quieres usar las pantallas actuales?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+            answer = QMessageBox.question(self, tr('Displays changed'), tr('The monitor layout or resolution changed. Have you checked the coordinates and would you like to use the current displays?'), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
             if answer != QMessageBox.StandardButton.Yes:
                 return False
             macro.display_signature = monitor_rects()
@@ -1385,7 +1383,7 @@ class MainWindow(QMainWindow):
         if selection is True:
             rows = self.editor.table.selected_rows()
             if not rows:
-                self.show_error("Selecciona una o más filas en el editor.")
+                self.show_error(tr('Select one or more rows in the editor.'))
                 return
             selected = [self.editor.model.events[i] for i in rows]
         if not self.validate_coordinates(self.current):
@@ -1410,7 +1408,7 @@ class MainWindow(QMainWindow):
             keyboard_mode = self.click_kind.currentData() == "keyboard"
             position = (self.click_x.value(), self.click_y.value()) if not keyboard_mode and self.click_position.currentData() == "fixed" else None
             if position and not point_on_screen(*position):
-                raise ValidationError("Las coordenadas no pertenecen a ningún monitor.")
+                raise ValidationError(tr('The coordinates do not belong to any monitor.'))
             options = ClickOptions(self.click_button.currentData(), self.click_double.isChecked(), interval,
                                    self.interval_max.value() if self.variable_interval.isChecked() else None,
                                    position, 0 if self.click_infinite.isChecked() else self.click_repetitions.value(), self.click_duration.value(),
@@ -1418,7 +1416,7 @@ class MainWindow(QMainWindow):
             options.validate()
             self.cache_clicker_settings()
             self.settings.save()
-            self.click_stats.setText("0 clics  ·  0 repeticiones  ·  00:00:00.000")
+            self.click_stats.setText(tr('0 clicks  ·  0 repeats  ·  00:00:00.000'))
             if held and self.router.hold_active is None:
                 return
             self.engine.click(options, 0 if held else self.click_countdown.value())
@@ -1428,7 +1426,7 @@ class MainWindow(QMainWindow):
                     self.engine.stop()
                     self.hold_control = None
         except (ValidationError, OSError) as exc:
-            self.show_error("No se pudo iniciar o guardar el autoclicker: " + str(exc))
+            self.show_error(tr('Could not start or save the autoclicker: ') + str(exc))
 
     def pause_task(self):
         if self.engine.task == "record" and self.capture_dialog.reviewing:
@@ -1453,13 +1451,13 @@ class MainWindow(QMainWindow):
         self.engine.stop()
         self.cancel_picker()
         self.router.capture = None
-        self.statusBar().showMessage("Parada de emergencia · tareas canceladas y cola vacía", 6000)
+        self.statusBar().showMessage(tr('Emergency stop · tasks canceled and queue cleared'), 6000)
         self.sync_state()
 
     def clear_queue(self):
         with self.engine.lock:
             self.engine.queue.clear()
-        self.queue_label.setText("Cola vacía")
+        self.queue_label.setText(tr('Queue empty'))
 
     def pick_position(self):
         if not self.require_idle() or self.picking:
@@ -1499,19 +1497,19 @@ class MainWindow(QMainWindow):
 
     def on_engine_event(self, name, data):
         if name == "countdown":
-            self.status_badge.setText(f"Comienza en {data['remaining']:.1f} s")
+            self.status_badge.setText(tr('Starts in {0:.1f} s', data['remaining']))
             if self.engine.task == "play":
-                self.playback_panel.detail.setText(f"Comienza en {data['remaining']:.1f} s")
+                self.playback_panel.detail.setText(tr('Starts in {0:.1f} s', data['remaining']))
         elif name == "state":
             self.sync_state()
         elif name == "progress":
             self.refresh_player(data["index"])
             self.progress.setValue(round(data["index"] / data["total"] * 100))
-            self.play_progress.setText(f"Acciones completadas: {data['index']} de {data['total']}  ·  {data['iterations']} iteraciones completadas  ·  {duration_text(data['elapsed'])}")
+            self.play_progress.setText(tr('Completed actions: {0} of {1}  ·  {2} completed iterations  ·  {3}', data['index'], data['total'], data['iterations'], duration_text(data['elapsed'])))
             self.playback_panel.set_progress(data["index"], data["total"], data["iterations"], duration_text(data["elapsed"]))
         elif name == "clicks":
-            unit = "pulsaciones" if self.click_kind.currentData() == "keyboard" else "clics"
-            self.click_stats.setText(f"{data['clicks']:,} {unit}  ·  {data['actions']:,} repeticiones  ·  {duration_text(data['elapsed'])}")
+            unit = tr('keystrokes') if self.click_kind.currentData() == "keyboard" else tr('clicks')
+            self.click_stats.setText(tr('{0:,} {1}  ·  {2:,} repeats  ·  {3}', data['clicks'], unit, data['actions'], duration_text(data['elapsed'])))
         elif name == "finished":
             if data["task"] == "record":
                 self.capture_dialog.hide()
@@ -1534,7 +1532,7 @@ class MainWindow(QMainWindow):
             self.show_notice(data["message"], warning=True)
         elif name == "saved":
             if not self.autosave_timer.isActive():
-                self.statusBar().showMessage("Guardado automáticamente · " + datetime.now().strftime("%H:%M:%S"), 4000)
+                self.statusBar().showMessage(tr('Saved automatically · ') + datetime.now().strftime("%H:%M:%S"), 4000)
 
     def sync_state(self):
         if not hasattr(self, "editor"):
@@ -1543,8 +1541,8 @@ class MainWindow(QMainWindow):
             self.notice.attach(self.capture_dialog if self.capture_dialog.isVisible() else self)
         busy = self.engine.busy
         task, phase = self.engine.task, self.engine.phase
-        names = {"idle": "Listo", "record": "Grabando", "play": "Reproduciendo", "click": "Autoclicker"}
-        phase_suffix = " · En pausa" if phase == "paused" else " · Deteniendo" if phase == "stopping" else ""
+        names = {"idle": tr('Ready'), "record": tr('Recording'), "play": tr('Playing'), "click": "Autoclicker"}
+        phase_suffix = tr(' · Paused') if phase == "paused" else tr(' · Stopping') if phase == "stopping" else ""
         if phase != "countdown":
             self.status_badge.setText("●  " + names[task] + phase_suffix)
         self.editor.set_editable(not busy and self.current is not None)
@@ -1561,9 +1559,9 @@ class MainWindow(QMainWindow):
         self.target_delivery.setEnabled(not busy)
         self.target_refresh.setEnabled(not busy)
         self.record_pause.setEnabled(task == "record" and phase not in ("countdown", "stopping"))
-        self.record_pause.setText("Reanudar" if phase == "paused" else "Pausar")
+        self.record_pause.setText(tr('Resume') if phase == "paused" else tr('Pause'))
         self.play_pause.setEnabled(task == "play" and phase not in ("countdown", "stopping"))
-        self.play_pause.setText("Reanudar" if phase == "paused" else "Pausar")
+        self.play_pause.setText(tr('Resume') if phase == "paused" else tr('Pause'))
         self.play_navigation.setEnabled(task == "play" and phase in ("running", "paused"))
         self.record_stop.setEnabled(task == "record")
         self.play_stop.setEnabled(task == "play")
@@ -1583,8 +1581,8 @@ class MainWindow(QMainWindow):
                 self._panel_control = self.engine.control
                 self.playback_panel.set_progress(0, self.engine.control.event_count, 0, duration_text(0))
                 self.progress.setValue(0)
-                self.play_progress.setText(f"Acciones completadas: 0 de {self.engine.control.event_count}")
-            self.playback_panel.update_phase(phase, active.name if active else "Macro actual")
+                self.play_progress.setText(tr('Completed actions: 0 of {0}', self.engine.control.event_count))
+            self.playback_panel.update_phase(phase, active.name if active else tr('Current macro'))
             self.playback_panel.show()
         else:
             self.playback_panel.hide()
@@ -1606,12 +1604,12 @@ class MainWindow(QMainWindow):
         if self.engine.recorder:
             recorder = self.engine.recorder
             self.record_timer.setText(duration_text(recorder.duration))
-            self.record_count.setText(f"{len(recorder.events):,} eventos registrados")
+            self.record_count.setText(tr('{0:,} recorded events', len(recorder.events)))
             if recorder.mode == "fixed":
                 self.capture_dialog.update_events(recorder.snapshot(), recorder.can_undo_reset)
                 self.capture_dialog.set_phase(self.engine.phase)
             if recorder.privacy_reason:
-                self.record_privacy.setText(recorder.privacy_reason + " Pausa siempre antes de introducir datos sensibles.")
+                self.record_privacy.setText(recorder.privacy_reason + tr(' Always pause before entering sensitive information.'))
             if time.monotonic() - self.last_checkpoint > 5 and self.record_target:
                 self.last_checkpoint = time.monotonic()
                 macro = self.macros.get(self.record_target)
@@ -1620,7 +1618,7 @@ class MainWindow(QMainWindow):
                     snapshot.events = recorder.snapshot()
                     snapshot.display_signature = monitor_rects()
                     self.recovery_writer.submit(snapshot)
-        self.queue_label.setText(f"{len(self.engine.queue)} macros en cola" if self.engine.queue else "Cola vacía")
+        self.queue_label.setText(tr('{0} macros queued', len(self.engine.queue)) if self.engine.queue else tr('Queue empty'))
 
     def choose_accent(self):
         dialog = ColorDialog(self.setting_accent.text(), self)
@@ -1650,7 +1648,7 @@ class MainWindow(QMainWindow):
             self.configure_router(self.macros.values(), self.router_controls(candidate["hotkeys"]))
             self.hotkeys_ok = True
             self.load_settings_fields()
-            self.statusBar().showMessage("Controles de grabación guardados y excluidos de la captura.", 6000)
+            self.statusBar().showMessage(tr('Recording controls saved and excluded from capture.'), 6000)
         except (ValidationError, OSError) as exc:
             if self.enable_hooks:
                 try:
@@ -1661,7 +1659,7 @@ class MainWindow(QMainWindow):
             self.show_error(str(exc))
 
     def choose_macro_folder(self):
-        folder = QFileDialog.getExistingDirectory(self, "Carpeta de macros", str(self.library.folder))
+        folder = QFileDialog.getExistingDirectory(self, tr('Macro folder'), str(self.library.folder))
         if folder:
             self.setting_folder.setText(folder)
 
@@ -1671,7 +1669,7 @@ class MainWindow(QMainWindow):
         from ..config import validate_settings
         old = copy.deepcopy(self.settings.data)
         candidate = copy.deepcopy(old)
-        candidate.update(theme=self.setting_theme.currentData(), accent=self.setting_accent.text(),
+        candidate.update(language=self.setting_language.currentData(), theme=self.setting_theme.currentData(), accent=self.setting_accent.text(),
                          countdown=self.setting_countdown.value(), speed=self.setting_speed.value(),
                          macro_folder=self.setting_folder.text().strip(), minimize=self.setting_minimize.currentData(),
                          confirm_delete=self.setting_confirm.isChecked(), minimize_on_close=self.setting_close.isChecked(), concurrency=self.setting_policy.currentData(),
@@ -1699,7 +1697,7 @@ class MainWindow(QMainWindow):
             if new_macros is not self.macros:
                 self.save_current()
                 if not self.writer.close():
-                    raise ValidationError("No se pudo terminar el guardado de la biblioteca anterior.")
+                    raise ValidationError(tr('Could not finish saving the previous library.'))
                 self.library, self.macros = new_library, new_macros
                 self.writer = SaveService(self.library, self.bridge.event.emit)
                 self.current = next(iter(self.macros.values()), None)
@@ -1715,14 +1713,16 @@ class MainWindow(QMainWindow):
             self.emergency_label.setText(display_binding(candidate["hotkeys"]["emergency"]))
             self.refresh_library()
             self.refresh_current()
-            self.hook_status.setText('Preferencias guardadas. Nexo continúa bloqueado.' if not self.engine.enabled else 'Preferencias guardadas. Atajos globales disponibles.')
-            self.statusBar().showMessage("Preferencias guardadas.", 5000)
+            self.hook_status.setText(tr('Preferences saved. Nexo remains locked.') if not self.engine.enabled else tr('Preferences saved. Global shortcuts available.'))
+            if candidate["language"] != old["language"]:
+                self.hook_status.setText(tr("Preferences saved. Restart Nexo to apply the language."))
+            self.statusBar().showMessage(tr("Preferences saved. Restart Nexo to apply the language.") if candidate["language"] != old["language"] else tr("Preferences saved."), 10000)
         except (ValidationError, OSError) as exc:
             self.show_error(str(exc))
 
     def restore_settings(self):
         self.load_settings_fields(copy.deepcopy(DEFAULTS))
-        self.statusBar().showMessage("Valores restaurados en el formulario. Pulsa Guardar preferencias para aplicarlos.", 6000)
+        self.statusBar().showMessage(tr('Defaults restored in the form. Press Save preferences to apply them.'), 6000)
 
     def changeEvent(self, event):
         if event.type() == QEvent.Type.WindowStateChange and self.isMinimized() and hasattr(self, "engine"):
@@ -1741,7 +1741,7 @@ class MainWindow(QMainWindow):
                     self.engine.pause()
                 self.hide()
             else:
-                self.show_notice('La bandeja del sistema no está disponible. Nexo permanece abierto para que puedas recuperarlo.', warning=True)
+                self.show_notice(tr('The system tray is unavailable. Nexo will stay open so you can access it.'), warning=True)
             event.ignore()
             return
         self.timer.stop()
@@ -1749,7 +1749,7 @@ class MainWindow(QMainWindow):
         self.cancel_picker()
         if not self.engine.close():
             event.ignore()
-            self.show_error("La tarea todavía está liberando recursos. Espera un momento y vuelve a cerrar.")
+            self.show_error(tr('The task is still releasing resources. Wait a moment, then close again.'))
             self.timer.start()
             return
 
@@ -1758,10 +1758,10 @@ class MainWindow(QMainWindow):
         self.writer.retry_failed()
         self.recovery_writer.retry_failed()
         if not self.writer.flush():
-            self.abort_close(event, "No se pudieron guardar todas las macros. Revisa el espacio y los permisos, o exporta los cambios antes de volver a cerrar.")
+            self.abort_close(event, tr('Some macros could not be saved. Check disk space and permissions, or export your changes before closing again.'))
             return
         if not self.recovery_writer.flush():
-            self.abort_close(event, "No se pudieron guardar las copias de recuperación. Revisa el espacio y los permisos y vuelve a cerrar para reintentar.")
+            self.abort_close(event, tr('Recovery copies could not be saved. Check disk space and permissions, then close again to retry.'))
             return
         self.cache_clicker_settings()
         self.settings.data["window_size"] = [self.width(), self.height()]
@@ -1769,14 +1769,14 @@ class MainWindow(QMainWindow):
         try:
             self.settings.save()
         except (OSError, ValidationError):
-            self.abort_close(event, "No se pudieron guardar las preferencias. Nexo seguirá abierto: revisa el espacio y los permisos y vuelve a cerrar para reintentar.")
+            self.abort_close(event, tr('Could not save preferences. Nexo will stay open: check disk space and permissions, then close again to retry.'))
             return
         main_closed = self.writer.close()
         recovery_closed = self.recovery_writer.close()
         if not main_closed or not recovery_closed:
             self.writer = SaveService(self.library, self.bridge.event.emit)
             self.recovery_writer = SaveService(Library(self.settings.directory / "recovery"), self.bridge.event.emit)
-            self.abort_close(event, "No se pudo completar el cierre del guardado. Nexo seguirá abierto para que puedas exportar y reintentar.")
+            self.abort_close(event, tr('Could not finish saving on exit. Nexo will stay open so you can export and try again.'))
             return
         self.closed = True
         if self.tray:
@@ -1803,13 +1803,13 @@ class MainWindow(QMainWindow):
             self.tray = QSystemTrayIcon(self)
             tray_icon = QApplication.windowIcon()
             self.tray.setIcon(tray_icon if not tray_icon.isNull() else icon('nav_home'))
-            self.tray.setToolTip('Nexo · Mostrar u ocultar')
+            self.tray.setToolTip(tr('Nexo · Show or hide'))
             menu = QMenu(self)
-            self.tray_show = menu.addAction('Mostrar Nexo')
+            self.tray_show = menu.addAction(tr('Show Nexo'))
             self.tray_show.triggered.connect(self.show_from_tray)
             menu.setDefaultAction(self.tray_show)
             menu.addSeparator()
-            self.tray_exit = menu.addAction('Salir de Nexo')
+            self.tray_exit = menu.addAction(tr('Quit Nexo'))
             self.tray_exit.triggered.connect(self.request_exit)
             self.tray.setContextMenu(menu)
             self.tray.activated.connect(self.tray_activated)

@@ -1,3 +1,4 @@
+from ..i18n import tr
 from PySide6.QtCore import Qt, QTimer, QEvent
 from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QHBoxLayout
 
@@ -13,10 +14,10 @@ class Notice(QFrame):
         self.message = QLabel()
         self.message.setWordWrap(True)
         self.message.setTextFormat(Qt.TextFormat.PlainText)
-        self.message.setAccessibleName('Aviso de Nexo')
+        self.message.setAccessibleName(tr('Nexo notification'))
         layout.addWidget(self.message, 1)
         self.dismiss = QPushButton('×')
-        self.dismiss.setAccessibleName('Cerrar aviso')
+        self.dismiss.setAccessibleName(tr('Dismiss notification'))
         self.dismiss.setFixedSize(28, 28)
         self.dismiss.setCursor(Qt.CursorShape.PointingHandCursor)
         self.dismiss.setObjectName('noticeDismiss')

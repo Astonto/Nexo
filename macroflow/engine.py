@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .i18n import tr
 
 import logging
 import threading
@@ -39,12 +40,12 @@ class Engine:
             from .background import WindowMessageDriver
             driver = WindowMessageDriver(self.input_target)
             driver.check_target()
-            self.notify("warning", {"message": "Destino encontrado. Se enviarán mensajes en segundo plano; la respuesta de la aplicación no está verificada."})
+            self.notify("warning", {"message": tr("Target found. Background messages will be sent; the application's response has not been verified.")})
             control.target_guard = driver.check_target
             return driver
         if self.input_delivery == "activate":
             if not self.input_target:
-                raise ValidationError("Selecciona una ventana para usar Activar ventana.")
+                raise ValidationError(tr('Select a target window to use Activate window.'))
             if self.activation_request is None:
                 self.input_target.activate(control)
             else:
@@ -74,9 +75,9 @@ class Engine:
     def _launch(self, task, work, seconds, macro_id=None, mode=None, event_count=0):
         with self.lock:
             if not self.enabled:
-                raise ValidationError('Nexo está bloqueado. Desactiva el switch de bloqueo para continuar.')
+                raise ValidationError(tr('Nexo is locked. Turn off the lock switch to continue.'))
             if self.busy or self.shutting_down:
-                raise ValidationError("Ya hay una tarea activa. Detenla antes de continuar.")
+                raise ValidationError(tr('Another task is running. Stop it before continuing.'))
             self.task, self.phase = task, "countdown" if seconds else "running"
             self.active_id, self.active_mode = macro_id, mode
             self.control = control = RunControl()
@@ -98,7 +99,7 @@ class Engine:
                 except Exception as exc:
 
                     LOG.error("automation_failure type=%s task=%s", type(exc).__name__, task)
-                    error = str(exc) if isinstance(exc, ValidationError) else "La tarea se interrumpió por un error del dispositivo. Revisa los permisos y vuelve a intentarlo."
+                    error = str(exc) if isinstance(exc, ValidationError) else tr('A device error interrupted the task. Check permissions and try again.')
                 finally:
                     with self.lock:
                         self.task, self.phase = "idle", "idle"
@@ -132,7 +133,7 @@ class Engine:
         snapshot = Macro.from_dict(macro.to_dict())
         events = list(selected) if selected is not None else snapshot.events
         if not events:
-            raise ValidationError("Añade o graba eventos antes de reproducir.")
+            raise ValidationError(tr('Add or record events before playing.'))
         chosen_speed = snapshot.speed if speed is None else speed
         chosen_reps = snapshot.repetitions if repetitions is None else repetitions
         def work(control):

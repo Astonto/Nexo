@@ -1,3 +1,4 @@
+from ..i18n import tr
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QPainter, QPen
 from PySide6.QtWidgets import QApplication, QLabel, QPushButton, QWidget
@@ -9,7 +10,7 @@ from .floating import ScreenBounds, move_within_screens
 
 class RecordingStop(QPushButton):
     def __init__(self, callback, parent):
-        super().__init__("Detener", parent)
+        super().__init__(tr('Stop'), parent)
         self.accent = RUNNING
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -37,7 +38,7 @@ class RecordingIndicator(QWidget):
                          Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowDoesNotAcceptFocus)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setWindowTitle("Nexo · Grabación visible")
+        self.setWindowTitle(tr('Nexo · Recording indicator'))
         self.setFixedSize(460, 76)
         self.screen_bounds = ScreenBounds(self)
         self.phase, self.drag_origin = "running", None
@@ -65,25 +66,25 @@ class RecordingIndicator(QWidget):
     def update_phase(self, phase):
         self.phase = phase
         paused = phase == "paused"
-        self.text.setText("GRABACIÓN EN PAUSA" if paused else "GRABACIÓN EN EJECUCIÓN")
-        self.subtitle.setText("Puedes detener cuando quieras" if paused else "Presiona detener para finalizar")
-        self.stop.setText("Detener")
+        self.text.setText(tr('RECORDING PAUSED') if paused else tr('RECORDING IN PROGRESS'))
+        self.subtitle.setText(tr('You can stop at any time') if paused else tr('Press stop to finish'))
+        self.stop.setText(tr('Stop'))
         self.stop.accent = PAUSED if paused else accent_color(self).name()
         self.pause.setIcon(icon("play" if paused else "pause", "#ffffff"))
-        self.pause.setToolTip("Reanudar grabación" if paused else "Pausar grabación")
+        self.pause.setToolTip(tr('Resume recording') if paused else tr('Pause recording'))
         self.pause.setAccessibleName(self.pause.toolTip())
         self.pause.show()
-        self.stop.setAccessibleName("Detener grabación")
-        self.stop.setToolTip("Detener la grabación actual")
+        self.stop.setAccessibleName(tr('Stop recording'))
+        self.stop.setToolTip(tr('Stop the current recording'))
         self.update()
         self.stop.update()
 
     def show_picker(self, emergency="Pause"):
         self.update_phase("running")
-        self.text.setText("SELECCIONA UN PUNTO")
-        self.subtitle.setText(f"{emergency} cancela la selección")
-        self.stop.setText("Cancelar")
-        self.stop.setAccessibleName("Cancelar selección de posición")
+        self.text.setText(tr('PICK A POINT'))
+        self.subtitle.setText(tr('{0} cancels selection', emergency))
+        self.stop.setText(tr('Cancel'))
+        self.stop.setAccessibleName(tr('Cancel position selection'))
         self.pause.hide()
 
     def paintEvent(self, event):

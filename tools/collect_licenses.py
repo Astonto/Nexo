@@ -19,4 +19,4 @@ for name in ("PySide6", "PySide6_Essentials", "shiboken6", "pynput", "comtypes",
 python_license = Path(sys.base_prefix) / "LICENSE.txt"
 if python_license.exists():
     shutil.copy2(python_license, root / "Python-LICENSE.txt")
-print(f"Recopilados {sum(p.is_file() for p in root.rglob('*'))} textos de licencia.")
+print(f"Collected {sum(p.is_file() for p in root.rglob('*'))} license texts.")

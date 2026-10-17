@@ -1,9 +1,10 @@
-
-
-
-
-
 from __future__ import annotations
+from .i18n import tr
+
+
+
+
+
 
 import ctypes
 import os
@@ -18,10 +19,10 @@ LOG = logging.getLogger("macroflow.background")
 class NativeWindowMessages:
     def __init__(self, target):
         if os.name != "nt":
-            raise ValidationError("El envío a una ventana en segundo plano requiere Windows.")
+            raise ValidationError(tr('Sending input to a background window requires Windows.'))
         from .windows import is_elevated_process
         if is_elevated_process(target.pid) and not is_elevated_process(os.getpid()):
-            raise ValidationError("El destino tiene permisos superiores a Nexo.")
+            raise ValidationError(tr('The target is running with higher privileges than Nexo.'))
         self.target = target
         self.last_keyboard_receiver = None
         self.reported_send = False
@@ -87,7 +88,7 @@ class NativeWindowMessages:
         callback = self.child_callback_type(inspect)
         self.api.EnumChildWindows(self.target.hwnd, callback, 0)
         if len(editors) > 1:
-            raise ValidationError("Hay varios controles de texto en el destino. Dale foco al editor que quieres usar antes de iniciar la macro.")
+            raise ValidationError(tr('The target has several text controls. Focus the editor you want to use before starting the macro.'))
         receiver = editors[0] if editors else self.target.hwnd
         self.last_keyboard_receiver = receiver if editors else None
         LOG.info("background_receiver root=%s receiver=%s class=%s discovered_editors=%s", self.target.hwnd, receiver, self.class_name(receiver), len(editors))
@@ -101,27 +102,27 @@ class NativeWindowMessages:
     def resolve_key(self, token):
         if token.startswith("char:"):
             if ord(token[5:]) > 65535:
-                raise ValidationError("Este carácter no se puede enviar como tecla en segundo plano.")
+                raise ValidationError(tr('This character cannot be sent as a background key press.'))
             thread = self.api.GetWindowThreadProcessId(self.target.hwnd, None)
             code = self.api.VkKeyScanExW(token[5:], self.api.GetKeyboardLayout(thread))
             if code == -1 or code >> 8:
-                raise ValidationError("Este carácter necesita modificadores o no existe en el teclado del destino. Graba las teclas físicas o usa el modo con foco.")
+                raise ValidationError(tr('This character needs modifiers or is not on the target keyboard. Record the physical keys or use focused mode.'))
             return code & 255
         from .recording import token_vk
         code = token_vk(token)
         if not code:
-            raise ValidationError("Tecla no compatible con mensajes en segundo plano.")
+            raise ValidationError(tr('This key is not supported by background messages.'))
         return code
 
     def post(self, hwnd, message, wp, lp):
         if not self.alive() or not self.owned(hwnd):
-            raise ValidationError("La ventana de destino se cerró o cambió. Selecciónala otra vez.")
+            raise ValidationError(tr('The target window closed or changed. Select it again.'))
         ctypes.set_last_error(0)
         if not self.api.PostMessageW(hwnd, message, wp, lp):
             error = ctypes.get_last_error()
-            detail = "Permisos insuficientes (UIPI)." if error == 5 else f"Error de Windows {error}."
+            detail = tr('Insufficient permissions (UIPI).') if error == 5 else tr('Windows error {0}.', error)
             LOG.warning("background_send_failed root=%s receiver=%s message=%s winerror=%s", self.target.hwnd, hwnd, message, error)
-            raise ValidationError(f"No se pudo enviar el mensaje 0x{message:04X} al destino HWND {hwnd}. {detail}")
+            raise ValidationError(tr('Could not send message 0x{0:04X} to target HWND {1}. {2}', message, hwnd, detail))
         if not self.reported_send:
             LOG.info("background_message_accepted root=%s receiver=%s class=%s processing_unverified=True", self.target.hwnd, hwnd, self.class_name(hwnd))
             self.reported_send = True
@@ -141,12 +142,12 @@ class NativeWindowMessages:
     def mouse_receiver(self, x, y):
         rect = wintypes.RECT()
         if not self.api.GetWindowRect(self.target.hwnd, ctypes.byref(rect)) or not (rect.left <= x < rect.right and rect.top <= y < rect.bottom):
-            raise ValidationError("Una coordenada queda fuera de la ventana elegida. Revisa su posición y la macro.")
+            raise ValidationError(tr('A coordinate falls outside the selected window. Check its position and the macro.'))
         hwnd = self.target.hwnd
         for _ in range(16):
             point = wintypes.POINT(x, y)
             if not self.api.ScreenToClient(hwnd, ctypes.byref(point)):
-                raise ValidationError("No se pudo convertir la coordenada al destino.")
+                raise ValidationError(tr('Could not convert the coordinate to the target window.'))
             child = self.api.ChildWindowFromPointEx(hwnd, point, 7)
             if not child or child == hwnd or not self.owned(child):
                 return hwnd
@@ -157,10 +158,10 @@ class NativeWindowMessages:
         rect = wintypes.RECT()
         point = wintypes.POINT()
         if not self.api.GetClientRect(self.target.hwnd, ctypes.byref(rect)):
-            raise ValidationError("La ventana seleccionada ya no está disponible.")
+            raise ValidationError(tr('The selected window is no longer available.'))
         point.x, point.y = rect.right // 2, rect.bottom // 2
         if not self.api.ClientToScreen(self.target.hwnd, ctypes.byref(point)):
-            raise ValidationError("No se pudo obtener el centro del destino.")
+            raise ValidationError(tr('Could not get the center of the target.'))
         return point.x, point.y
 
     def mouse(self, hwnd, event, flags):
@@ -172,7 +173,7 @@ class NativeWindowMessages:
                     self.post(hwnd, message, flags | (((delta * 120) & 65535) << 16), lp)
             return
         if not self.api.ScreenToClient(hwnd, ctypes.byref(point)):
-            raise ValidationError("No se pudo convertir la coordenada al destino.")
+            raise ValidationError(tr('Could not convert the coordinate to the target window.'))
         lp = (point.x & 65535) | ((point.y & 65535) << 16)
         if event.kind == "move":
             message, wp = 0x200, flags
@@ -192,7 +193,7 @@ class WindowMessageDriver:
 
     def check_target(self):
         if not self.transport.alive():
-            raise ValidationError("La ventana seleccionada se cerró. Se detuvo la macro.")
+            raise ValidationError(tr('The selected window closed. The macro was stopped.'))
 
     def position(self):
         return self.last_position or self.transport.position()
@@ -255,7 +256,7 @@ class WindowMessageDriver:
             except Exception as error:
                 errors.append(error)
         if errors:
-            raise ValidationError("Windows no confirmó todos los mensajes de liberación del destino.")
+            raise ValidationError(tr('Windows did not confirm all input release messages for the target.'))
 
     def suspend(self):
         state = list(self.held_keys), [item[1] for item in self.held_buttons.values()]

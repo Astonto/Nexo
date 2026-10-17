@@ -1,3 +1,4 @@
+from ..i18n import tr
 import copy
 
 from PySide6.QtWidgets import QHeaderView, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
@@ -14,9 +15,9 @@ class RecordingRestrictions(QWidget):
         self.owner = parent
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(label("Una exclusión activada impide grabar esa tecla. No afecta a los activadores de macros.", "muted", True))
+        layout.addWidget(label(tr('An enabled exclusion prevents that key from being recorded. It does not affect macro triggers.'), "muted", True))
         self.table = QTableWidget(0, 4)
-        self.table.setHorizontalHeaderLabels(["Tecla", "Exclusión", "", ""])
+        self.table.setHorizontalHeaderLabels([tr('Key'), tr('Exclusion'), "", ""])
         parent.style_table(self.table)
         self.table.setMinimumHeight(280)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
@@ -25,9 +26,9 @@ class RecordingRestrictions(QWidget):
         self.table.setColumnWidth(3, 48)
         layout.addWidget(self.table)
         self.preset = combo([(key_label(key), key) for key in (27, 46, 44, 45, 20, 17, 16, 18)])
-        layout.addWidget(row(button("Añadir tecla…", self.assign), self.preset,
-                             button("Añadir seleccionada", lambda: self.add(self.preset.currentData())), None))
-        layout.addWidget(label("Ctrl, Shift y Alt se añaden desde la lista; incluyen ambos lados del teclado. Excluir Shift puede cambiar los símbolos reproducidos.", "muted", True))
+        layout.addWidget(row(button(tr('Add key…'), self.assign), self.preset,
+                             button(tr('Add selected'), lambda: self.add(self.preset.currentData())), None))
+        layout.addWidget(label(tr('Add Ctrl, Shift and Alt from the list; they include both sides of the keyboard. Excluding Shift can change the symbols played back.'), "muted", True))
         self.entries = []
 
     def load(self, entries):
@@ -38,11 +39,11 @@ class RecordingRestrictions(QWidget):
         self.table.setRowCount(len(self.entries))
         for i, entry in enumerate(self.entries):
             self.table.setItem(i, 0, QTableWidgetItem(key_label(entry["key"])))
-            self.table.setItem(i, 1, QTableWidgetItem("Activada" if entry["enabled"] else "Desactivada"))
-            toggle = button("Desactivar" if entry["enabled"] else "Activar", lambda checked=False, k=entry["key"]: self.toggle(k))
+            self.table.setItem(i, 1, QTableWidgetItem(tr('Enabled') if entry["enabled"] else tr('Disabled')))
+            toggle = button(tr('Disable') if entry["enabled"] else tr('Enable'), lambda checked=False, k=entry["key"]: self.toggle(k))
             trash = button("", lambda checked=False, k=entry["key"]: self.remove(k), symbol='trash', danger=True)
-            trash.setToolTip("Eliminar exclusión: permitir grabar esta tecla")
-            trash.setAccessibleName("Eliminar exclusión de " + key_label(entry["key"]))
+            trash.setToolTip(tr('Remove exclusion: allow recording this key'))
+            trash.setAccessibleName(tr('Remove exclusion for ') + key_label(entry["key"]))
             self.table.setCellWidget(i, 2, toggle)
             self.table.setCellWidget(i, 3, trash)
 

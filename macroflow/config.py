@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .i18n import tr
 
 import os
 import re
@@ -15,10 +16,10 @@ CLICKER_DEFAULTS = {"kind": "mouse", "button": "left", "double": False, "positio
                     "key": "V", "hours": 0, "minutes": 0, "seconds": 0, "milliseconds": 100,
                     "variable": False, "interval_max": .5, "repetitions": 100, "infinite": False,
                     "duration": 0.0, "countdown": 3, "hold_button": "", "ignore_ctrl": False, "ignore_alt": False, "ignore_shift": False, "ignore_win": False}
-HOTKEY_LABELS = {"record_start": "Iniciar grabación", "record_stop": "Detener grabación", "record_pause": "Pausar / reanudar grabación",
-                 "play": "Iniciar reproducción", "stop": "Detener reproducción", "click": "Iniciar / detener autoclicker",
-                 "emergency": "Parada de emergencia"}
-DEFAULTS = {"theme": "dark", "accent": "#ff1744", "language": "es", "countdown": 3,
+HOTKEY_LABELS = {"record_start": tr('Start recording'), "record_stop": tr('Stop recording'), "record_pause": tr('Pause / resume recording'),
+                 "play": tr('Start playback'), "stop": tr('Stop playback'), "click": tr('Start / stop autoclicker'),
+                 "emergency": tr('Emergency stop')}
+DEFAULTS = {"theme": "dark", "accent": "#ff1744", "language": "en", "countdown": 3,
             "speed": 1.0, "macro_folder": "", "minimize": "keep", "minimize_on_close": True, "confirm_delete": True,
             "capture_moves": False, "hotkeys": DEFAULT_HOTKEYS, "last_macro": "", "window_size": [1240, 820],
             "concurrency": "block", "record_mode": "timed", "fixed_interval": 1.0, "sidebar_collapsed": False, "clicker": CLICKER_DEFAULTS,
@@ -44,7 +45,7 @@ def data_directory():
 def validate_settings(data):
     from .hotkeys import validate_hotkeys
     if not isinstance(data, dict) or set(data) - set(DEFAULTS):
-        raise ValidationError("Configuración desconocida.")
+        raise ValidationError(tr('Unknown setting.'))
     result = deepcopy(DEFAULTS)
     result.update(data)
     if isinstance(result["hotkeys"], dict) and "record" in result["hotkeys"]:
@@ -52,16 +53,16 @@ def validate_settings(data):
         result["hotkeys"] = dict(result["hotkeys"])
         result["hotkeys"]["record_start"] = result["hotkeys"].pop("record")
         result["hotkeys"].setdefault("record_stop", DEFAULT_HOTKEYS["record_stop"])
-    if result["theme"] not in ("dark", "light") or result["language"] != "es":
-        raise ValidationError("Tema o idioma inválido.")
+    if result["theme"] not in ("dark", "light") or result["language"] not in ("es", "en"):
+        raise ValidationError(tr('Invalid theme or language.'))
     if not isinstance(result["accent"], str) or not re.fullmatch(r"#[0-9a-fA-F]{6}", result["accent"]):
-        raise ValidationError("Color inválido. Usa #RRGGBB.")
+        raise ValidationError(tr('Invalid color. Use #RRGGBB.'))
     result['accent'] = result['accent'].lower()
-    number(result["countdown"], "Cuenta regresiva", 0, 30)
-    number(result["speed"], "Velocidad", 0.1, 10)
+    number(result["countdown"], tr('Countdown'), 0, 30)
+    number(result["speed"], tr('Speed'), 0.1, 10)
     if result["record_mode"] not in ("timed", "fixed"):
-        raise ValidationError("Modo de captura inválido.")
-    number(result["fixed_interval"], "Intervalo de pulsaciones", 0.01, 86400)
+        raise ValidationError(tr('Invalid capture mode.'))
+    number(result["fixed_interval"], tr('Keystroke interval'), 0.01, 86400)
     clicker = result["clicker"]
     if isinstance(clicker, dict):
         clicker = dict(clicker)
@@ -72,54 +73,54 @@ def validate_settings(data):
     if isinstance(clicker, dict):
         hold = clicker.get('hold_button', '')
         if not isinstance(hold, str):
-            raise ValidationError('Activador de repetición inválido.')
+            raise ValidationError(tr('Invalid hold trigger.'))
         if hold:
             from .triggers import parse_binding
             clicker['hold_button'] = parse_binding(hold).label
     if not isinstance(clicker, dict) or set(clicker) != set(CLICKER_DEFAULTS):
-        raise ValidationError("Configuración del autoclicker inválida.")
+        raise ValidationError(tr('Invalid autoclicker settings.'))
     for key, choices in (("kind", ("mouse", "keyboard")), ("button", ("left", "right", "middle", "x1", "x2")), ("position", ("current", "fixed"))):
         if clicker[key] not in choices:
-            raise ValidationError("Opción del autoclicker inválida.")
+            raise ValidationError(tr('Invalid autoclicker option.'))
     for key in ("double", "variable", "infinite", "ignore_ctrl", "ignore_alt", "ignore_shift", "ignore_win"):
         if type(clicker[key]) is not bool:
-            raise ValidationError("Estado del autoclicker inválido.")
+            raise ValidationError(tr('Invalid autoclicker state.'))
     for key, low, high in (("hours", 0, 24), ("minutes", 0, 59), ("seconds", 0, 59), ("milliseconds", 0, 999),
                            ("x", -1_000_000, 1_000_000), ("y", -1_000_000, 1_000_000), ("repetitions", 1, 10_000_000), ("countdown", 0, 30)):
         from .models import integer
         integer(clicker[key], key, low, high)
-    number(clicker["interval_max"], "Intervalo máximo", .001, 90000)
-    number(clicker["duration"], "Duración", 0, 604800)
+    number(clicker["interval_max"], tr('Maximum interval'), .001, 90000)
+    number(clicker["duration"], tr('Duration'), 0, 604800)
     if not isinstance(clicker["key"], str):
-        raise ValidationError("Tecla del autoclicker inválida.")
+        raise ValidationError(tr('Invalid autoclicker key.'))
     if clicker["key"]:
         from .triggers import parse_binding
         parse_binding(clicker["key"])
     restrictions = result["excluded_keys"]
     if not isinstance(restrictions, list) or len(restrictions) > 254:
-        raise ValidationError("Lista de teclas excluidas inválida.")
+        raise ValidationError(tr('Invalid excluded keys list.'))
     seen = set()
     for entry in restrictions:
         if (not isinstance(entry, dict) or set(entry) != {"key", "enabled"}
                 or type(entry["key"]) is not int or not 1 <= entry["key"] <= 254
                 or type(entry["enabled"]) is not bool or entry["key"] in seen):
-            raise ValidationError("Tecla excluida inválida o duplicada.")
+            raise ValidationError(tr('Invalid or duplicate excluded key.'))
         seen.add(entry["key"])
     for key in ("macro_folder", "last_macro"):
         if not isinstance(result[key], str) or len(result[key]) > 1000:
-            raise ValidationError("Ruta o identificador inválido.")
+            raise ValidationError(tr('Invalid path or identifier.'))
     if result["minimize"] not in ("keep", "pause"):
-        raise ValidationError("Comportamiento al minimizar inválido.")
+        raise ValidationError(tr('Invalid minimize behavior.'))
     if result["concurrency"] not in ("block", "queue"):
-        raise ValidationError("Política de ejecución inválida.")
+        raise ValidationError(tr('Invalid execution policy.'))
     for key in ("confirm_delete", "capture_moves", "sidebar_collapsed", "minimize_on_close"):
         if not isinstance(result[key], bool):
-            raise ValidationError("Preferencia inválida.")
+            raise ValidationError(tr('Invalid preference.'))
     size = result["window_size"]
     if not isinstance(size, list) or len(size) != 2:
-        raise ValidationError("Tamaño de ventana inválido.")
+        raise ValidationError(tr('Invalid window size.'))
     for value in size:
-        number(value, "Tamaño de ventana", 400, 10000)
+        number(value, tr('Window size'), 400, 10000)
     validate_hotkeys(result["hotkeys"])
     return result
 
@@ -137,7 +138,7 @@ class Settings:
             self.data = validate_settings(data)
         except (OSError, ValidationError):
             self.data = deepcopy(DEFAULTS)
-            self.warning = "No se pudo leer la configuración. Se cargaron valores predeterminados; el archivo original se conserva como settings.invalid.json."
+            self.warning = tr('Could not read settings. Defaults were loaded; the original file was kept as settings.invalid.json.')
             try:
                 self.path.replace(self.directory / "settings.invalid.json")
             except OSError:

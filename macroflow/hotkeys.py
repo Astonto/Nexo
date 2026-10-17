@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .i18n import tr
 
 import ctypes
 import os
@@ -15,18 +16,18 @@ def parse_hotkey(text):
     from .triggers import parse_binding
     binding = parse_binding(text)
     if not isinstance(binding.key, int):
-        raise ValidationError("Los controles globales requieren una tecla del teclado.")
+        raise ValidationError(tr('Global controls require a keyboard key.'))
     return sum(MODIFIERS[m.lower()] for m in binding.modifiers), binding.key
 
 
 def validate_hotkeys(mapping):
     if not isinstance(mapping, dict) or set(mapping) != ACTIONS:
-        raise ValidationError("Deben configurarse los siete atajos.")
+        raise ValidationError(tr('All seven shortcuts must be configured.'))
     seen = set()
     for value in mapping.values():
         chord = parse_hotkey(value)
         if chord in seen:
-            raise ValidationError('Dos acciones tienen el mismo atajo.')
+            raise ValidationError(tr('Two actions share the same shortcut.'))
         seen.add(chord)
     return mapping
 
@@ -51,11 +52,11 @@ class GlobalHotkeys:
         for action, value in (extra or {}).items():
             chord = parse_hotkey(value)
             if not action.startswith('macro:') or chord in seen:
-                raise ValidationError('El activador nativo de la macro está duplicado.')
+                raise ValidationError(tr("The macro's native trigger is duplicated."))
             seen.add(chord)
             combined[action] = value
         if os.name != "nt":
-            raise ValidationError("Los atajos globales de esta edición requieren Windows.")
+            raise ValidationError(tr('Global shortcuts in this edition require Windows.'))
         self.stop()
         ready = threading.Event()
         self.error = None
@@ -63,7 +64,7 @@ class GlobalHotkeys:
         self.thread.start()
         if not ready.wait(5):
             self.stop()
-            raise ValidationError("Windows no respondió al registrar los atajos.")
+            raise ValidationError(tr('Windows did not respond when registering shortcuts.'))
         if self.error:
             self.stop()
             raise ValidationError(self.error)
@@ -78,7 +79,7 @@ class GlobalHotkeys:
             for identifier, (action, value) in enumerate(mapping.items(), 1):
                 modifiers, vk = parse_hotkey(value)
                 if not user32.RegisterHotKey(None, identifier, modifiers | 0x4000, vk):
-                    self.error = f"El atajo {value} está ocupado por Windows u otra aplicación. Cámbialo en Configuración."
+                    self.error = tr('The shortcut {0} is used by Windows or another application. Change it in Settings.', value)
                     return
                 registered[identifier] = action
             ready.set()

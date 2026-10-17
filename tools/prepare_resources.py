@@ -16,8 +16,8 @@ painter = QPainter(image)
 renderer.render(painter)
 painter.end()
 if not image.save(str(root / "resources" / "nexo.ico"), "ICO"):
-    raise RuntimeError("No se pudo generar el icono.")
+    raise RuntimeError("Could not generate the icon.")
 if sys.platform == "win32":
     import comtypes.client
     comtypes.client.GetModule("UIAutomationCore.dll")
-print("Icono y recursos de accesibilidad preparados.")
+print("Icon and accessibility resources prepared.")

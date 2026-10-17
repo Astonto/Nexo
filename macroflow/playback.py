@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .i18n import tr
 
 import random
 import threading
@@ -116,10 +117,10 @@ class PynputDriver:
     def dispatch(self, event):
         from .windows import point_on_screen, target_allowed
         if not target_allowed():
-            raise ValidationError("El destino tiene permisos superiores o no permite acceso. Nexo se detuvo sin eludir restricciones de Windows.")
+            raise ValidationError(tr('The target has higher privileges or does not allow access. Nexo stopped without bypassing Windows restrictions.'))
         if event.x is not None:
             if not point_on_screen(event.x, event.y):
-                raise ValidationError("Una coordenada está fuera de los monitores actuales. Revisa el editor.")
+                raise ValidationError(tr('A coordinate falls outside the current monitors. Check the editor.'))
             self.mouse.position = (event.x, event.y)
         if event.kind == "key_down":
             self.held_keys[event.key] = None
@@ -151,9 +152,9 @@ class PynputDriver:
                 self.mouse.release(getattr(self.mouse_module.Button, button))
                 self.held_buttons.pop(button, None)
             except Exception:
-                errors.append("botón")
+                errors.append(tr('button'))
         if errors:
-            raise RuntimeError("Windows no confirmó la liberación de todas las entradas.")
+            raise RuntimeError(tr('Windows did not confirm that all inputs were released.'))
 
     def suspend(self):
         state = (list(self.held_keys), list(self.held_buttons))
@@ -178,20 +179,20 @@ class TargetDriver:
 
     def check_target(self):
         if self.armed and not self.target.allows():
-            raise ValidationError("La ventana seleccionada perdió el foco. Ejecución detenida y entradas liberadas.")
+            raise ValidationError(tr('The selected window lost focus. Playback stopped and held inputs were released.'))
 
     def __getattr__(self, name):
         return getattr(self.driver, name)
 
     def dispatch(self, event):
         if not self.target.allows(event):
-            raise ValidationError("La ventana seleccionada perdió el foco, se cerró o la acción queda fuera de ella. Se detuvo la ejecución y se liberaron las entradas.")
+            raise ValidationError(tr('The selected window lost focus, closed, or the action falls outside it. Playback stopped and held inputs were released.'))
         self.armed = True
         self.driver.dispatch(event)
 
     def restore(self, state):
         if not self.target.allows():
-            raise ValidationError("Activa la ventana seleccionada antes de reanudar.")
+            raise ValidationError(tr('Activate the selected window before resuming.'))
         self.driver.restore(state)
 
 
@@ -206,11 +207,11 @@ def countdown(control, seconds, notify):
 
 
 def play_events(events, driver, control, *, speed=1.0, repetitions=1, repeat_interval=0.01, notify=lambda *args: None):
-    number(speed, "Velocidad", 0.1, 10)
-    integer(repetitions, "Repeticiones", 0, 10_000_000)
-    number(repeat_interval, "Intervalo entre repeticiones", 0.01, 86400)
+    number(speed, tr('Speed'), 0.1, 10)
+    integer(repetitions, tr('Repeats'), 0, 10_000_000)
+    number(repeat_interval, tr('Interval between repeats'), 0.01, 86400)
     if not events:
-        raise ValidationError("La macro no contiene eventos.")
+        raise ValidationError(tr('The macro has no events.'))
     for event in events:
         event.validate()
     total = len(events)

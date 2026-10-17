@@ -1,3 +1,4 @@
+from ..i18n import tr
 from PySide6.QtCore import QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QFont, QPen
 from PySide6.QtWidgets import QStyledItemDelegate, QStyle
@@ -13,7 +14,7 @@ def describe_event(event):
         vk = token_vk(event.key)
         value = key_label(vk) if vk else event.key.removeprefix("char:").removeprefix("key:")
     elif event.button:
-        value = {"left": "Izquierdo", "right": "Derecho", "middle": "Central", "x1": "Lateral 1", "x2": "Lateral 2"}[event.button]
+        value = {"left": tr('Left'), "right": tr('Right'), "middle": tr('Middle'), "x1": tr('Side button 1'), "x2": tr('Side button 2')}[event.button]
     elif event.kind == "move":
         value = f"{event.x}, {event.y}"
     elif event.kind == "scroll":
@@ -46,7 +47,7 @@ class ActionDelegate(QStyledItemDelegate):
         painter.drawText(rect.adjusted(12, 7, -12, -70), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, f"{index.row() + 1:02d}")
         down = event.kind.endswith("_down")
         up = event.kind.endswith("_up")
-        direction = "↓ Pulsar" if down else "↑ Soltar" if up else "Pausa" if event.kind == "wait" else "Mover" if event.kind == "move" else "Rueda"
+        direction = tr('↓ Press') if down else tr('↑ Release') if up else tr('Wait') if event.kind == "wait" else tr('Move') if event.kind == "move" else tr('Scroll')
         painter.drawText(rect.adjusted(12, 7, -10, -70), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, direction)
         title = describe_event(event).split(" · ", 1)[1]
         painter.setFont(QFont("Inter", 12, QFont.Weight.DemiBold))

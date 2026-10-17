@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .i18n import tr
 
 import os
 import queue
@@ -105,7 +106,7 @@ class Recorder:
             modifiers = self.physical_modifiers() if self.physical_modifiers and event.kind.startswith("key_") else None
             self.queue.put_nowait((event, time.monotonic(), self.epoch, own, modifiers))
         except queue.Full:
-            self.error = "La captura excedió el búfer. Se detuvo para evitar una secuencia incompleta."
+            self.error = tr('The capture buffer overflowed. Recording stopped to avoid an incomplete sequence.')
             self.stopped.set()
 
     def start(self):
@@ -114,7 +115,7 @@ class Recorder:
         self.worker.start()
         if not self.ready.wait(10):
             self.stop()
-            raise RuntimeError("No se pudo iniciar la protección de grabación.")
+            raise RuntimeError(tr('Could not start recording protection.'))
 
         def key_event(key, pressed, injected=False):
             token = key_token(key)
@@ -134,7 +135,7 @@ class Recorder:
 
     def _append(self, event, stamp):
         if len(self.events) >= MAX_EVENTS - 64:
-            self.error = "Se alcanzó el límite de 100 000 eventos; se guardará la grabación."
+            self.error = tr('The 100,000-event limit was reached; the recording will be saved.')
             self.stopped.set()
             return
         self.events.append(replace(event, delay=max(0, stamp - self.last_time)).validate())
@@ -221,7 +222,7 @@ class Recorder:
                         continue
                     self._append(event, stamp)
         except Exception:
-            self.error = "La captura se interrumpió. Revisa el dispositivo y los permisos de Windows."
+            self.error = tr('Capture was interrupted. Check the device and Windows permissions.')
             self.stopped.set()
         finally:
             self.ready.set()
@@ -267,7 +268,7 @@ class Recorder:
 
     def set_fixed_interval(self, interval):
         from .models import number
-        number(interval, "Intervalo de pulsaciones", 0.01, 86400)
+        number(interval, tr('Keystroke interval'), 0.01, 86400)
         with self.lock:
             self.fixed_interval = interval
             for position, index in enumerate(self.fixed_starts):

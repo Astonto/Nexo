@@ -1,3 +1,4 @@
+from ..i18n import tr
 
 import re
 from PySide6.QtCore import Qt, QRectF, QPointF, Signal
@@ -19,8 +20,8 @@ class ColorSurface(QWidget):
         self.setMinimumWidth(280)
         self.setCursor(Qt.CursorShape.CrossCursor)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        self.setAccessibleName('Tono del color' if hue_only else 'Saturación y brillo')
-        self.setToolTip('Arrastra o utiliza las flechas para ajustar el color')
+        self.setAccessibleName(tr('Hue') if hue_only else tr('Saturation and brightness'))
+        self.setToolTip(tr('Drag or use the arrow keys to adjust the color'))
 
     def set_color(self, color):
         hue, sat, val, _ = color.getHsvF()
@@ -135,7 +136,7 @@ class ColorChip(QPushButton):
 class ColorDialog(QDialog):
     def __init__(self, initial, parent=None):
         super().__init__(parent)
-        self.setWindowTitle('Color de acento')
+        self.setWindowTitle(tr('Accent color'))
         self.setObjectName('colorDialog')
         self.setFixedWidth(460)
         self.initial = QColor(initial) if QColor(initial).isValid() else QColor(DEFAULT_ACCENT)
@@ -143,8 +144,8 @@ class ColorDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 22, 24, 22)
         layout.setSpacing(12)
-        layout.addWidget(label('Color de acento', 'sectionTitle'))
-        layout.addWidget(label('Personaliza los detalles de la interfaz.', 'muted'))
+        layout.addWidget(label(tr('Accent color'), 'sectionTitle'))
+        layout.addWidget(label(tr('Make the interface your own.'), 'muted'))
         self.plane, self.hue = ColorSurface(), ColorSurface(True)
         self.plane.changed.connect(self.set_color)
         self.hue.changed.connect(self.change_hue)
@@ -153,7 +154,7 @@ class ColorDialog(QDialog):
         swatches = QHBoxLayout()
         swatches.setSpacing(10)
         self.chips = []
-        for name, color in (('Rojo Nexo', DEFAULT_ACCENT), ('Coral', '#f46b45'), ('Ámbar', '#e4a321'), ('Verde', '#25a56a'), ('Turquesa', '#10a6b4'), ('Azul', '#2879ed'), ('Violeta', '#8759df'), ('Rosa', '#dc4c98')):
+        for name, color in ((tr('Nexo red'), DEFAULT_ACCENT), ('Coral', '#f46b45'), (tr('Amber'), '#e4a321'), (tr('Green'), '#25a56a'), (tr('Teal'), '#10a6b4'), (tr('Blue'), '#2879ed'), (tr('Purple'), '#8759df'), (tr('Pink'), '#dc4c98')):
             chip = ColorChip(color, name, self.set_color)
             self.chips.append(chip)
             swatches.addWidget(chip)
@@ -164,7 +165,7 @@ class ColorDialog(QDialog):
         self.hex = QLineEdit()
         self.hex.setMinimumWidth(110)
         self.hex.setMaxLength(7)
-        self.hex.setAccessibleName('Código hexadecimal del color')
+        self.hex.setAccessibleName(tr('Hexadecimal color code'))
         self.hex.textEdited.connect(self.edit_hex)
         column = QVBoxLayout()
         column.addWidget(label('HEX', 'eyebrow'))
@@ -176,7 +177,7 @@ class ColorDialog(QDialog):
             field.setFixedWidth(78)
             field.setRange(0, 255)
             field.setKeyboardTracking(False)
-            field.setAccessibleName({'R': 'Rojo', 'G': 'Verde', 'B': 'Azul'}[name])
+            field.setAccessibleName({'R': tr('Red'), 'G': tr('Green'), 'B': tr('Blue')}[name])
             field.valueChanged.connect(self.edit_rgb)
             column = QVBoxLayout()
             column.addWidget(label(name, 'eyebrow'))
@@ -185,23 +186,23 @@ class ColorDialog(QDialog):
             self.rgb.append(field)
         layout.addLayout(fields)
         preview = QHBoxLayout()
-        self.old_chip = ColorChip(self.initial, 'Color actual', self.set_color)
-        self.new_chip = ColorChip(self.color, 'Vista previa del nuevo color')
+        self.old_chip = ColorChip(self.initial, tr('Current color'), self.set_color)
+        self.new_chip = ColorChip(self.color, tr('New color preview'))
         preview.addWidget(self.old_chip)
-        preview.addWidget(label('Actual', 'muted'))
+        preview.addWidget(label(tr('Current'), 'muted'))
         preview.addSpacing(16)
         preview.addWidget(self.new_chip)
-        preview.addWidget(label('Nuevo', 'muted'))
+        preview.addWidget(label(tr('New color'), 'muted'))
         preview.addStretch()
         layout.addLayout(preview)
         self.error = label('', 'formError')
         self.error.setWordWrap(True)
         layout.addWidget(self.error)
         actions = QHBoxLayout()
-        actions.addWidget(button('Restablecer rojo', lambda: self.set_color(QColor(DEFAULT_ACCENT))))
+        actions.addWidget(button(tr('Reset to red'), lambda: self.set_color(QColor(DEFAULT_ACCENT))))
         actions.addStretch()
-        actions.addWidget(button('Cancelar', self.reject))
-        self.use = button('Usar color', self.accept, primary=True)
+        actions.addWidget(button(tr('Cancel'), self.reject))
+        self.use = button(tr('Use color'), self.accept, primary=True)
         actions.addWidget(self.use)
         layout.addLayout(actions)
         for control in self.findChildren(QPushButton):
@@ -230,7 +231,7 @@ class ColorDialog(QDialog):
         value = text if text.startswith('#') else '#' + text
         valid = bool(re.fullmatch(r'#[0-9a-fA-F]{6}', value))
         self.use.setEnabled(valid)
-        self.error.setText('Escribe seis dígitos: por ejemplo, #2879ED.' if not valid else '')
+        self.error.setText(tr('Enter six digits, for example #2879ED.') if not valid else '')
         if valid:
             self.set_color(QColor(value))
 

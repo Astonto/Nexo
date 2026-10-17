@@ -1,4 +1,5 @@
 from __future__ import annotations
+from ..i18n import tr
 
 import json
 from dataclasses import replace
@@ -34,7 +35,7 @@ class ReplaceEvents(QUndoCommand):
 
 class EventModel(QAbstractTableModel):
     changed = Signal()
-    HEADERS = ("N.º", "Evento", "Tecla o botón", "X", "Y", "Tiempo (s)")
+    HEADERS = (tr('No.'), tr('Event'), tr('Key or button'), "X", "Y", tr('Time (s)'))
 
     def __init__(self):
         super().__init__()
@@ -53,7 +54,7 @@ class EventModel(QAbstractTableModel):
         if not self.editable:
             return
         if len(events) > MAX_EVENTS:
-            raise ValidationError("Se supera el límite de 100 000 eventos.")
+            raise ValidationError(tr('The sequence exceeds the 100,000-event limit.'))
         for event in events:
             event.validate()
         self.history.push(ReplaceEvents(self, events, description))
@@ -79,7 +80,7 @@ class EventModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.TextAlignmentRole and index.column() in (0, 3, 4, 5):
             return int(Qt.AlignmentFlag.AlignCenter)
         if role == Qt.ItemDataRole.ToolTipRole:
-            return describe_event(event) + f" · Espera previa: {event.delay:g} s. Doble clic para editar."
+            return describe_event(event) + tr(' · Delay before action: {0:g} s. Double-click to edit.', event.delay)
 
     def flags(self, index):
         flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
@@ -92,7 +93,7 @@ class EventModel(QAbstractTableModel):
         moving = [self.events[r] for r in rows]
         remaining = [e for i, e in enumerate(self.events) if i not in set(rows)]
         target -= sum(r < target for r in rows)
-        self.update(remaining[:target] + moving + remaining[target:], "Reordenar eventos")
+        self.update(remaining[:target] + moving + remaining[target:], tr('Reorder events'))
 
 
 class EventTable(QTableView):
@@ -145,7 +146,7 @@ class EventTable(QTableView):
 class EventDialog(QDialog):
     def __init__(self, event=None, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Editar acción" if event else "Añadir acción")
+        self.setWindowTitle(tr('Edit action') if event else tr('Add action'))
         self.setMinimumWidth(430)
         event = event or Event("wait", delay=0.5)
         layout = QVBoxLayout(self)
@@ -153,20 +154,20 @@ class EventDialog(QDialog):
         self.kind = combo([(LABELS[k], k) for k in KINDS])
         self.kind.setCurrentIndex(KINDS.index(event.kind))
         self.key = QLineEdit(event.key or "char:a")
-        self.key.setPlaceholderText("a, key:enter, key:ctrl_l o vk:65")
-        self.button = combo([(n, v) for n, v in (("Izquierdo", "left"), ("Derecho", "right"), ("Central", "middle"), ("Lateral X1", "x1"), ("Lateral X2", "x2"))])
+        self.key.setPlaceholderText(tr('a, key:enter, key:ctrl_l or vk:65'))
+        self.button = combo([(n, v) for n, v in ((tr('Left'), "left"), (tr('Right'), "right"), (tr('Middle'), "middle"), (tr('Side button X1'), "x1"), (tr('Side button X2'), "x2"))])
         self.button.setCurrentIndex(max(0, self.button.findData(event.button)))
         self.x, self.y = spin(-1_000_000, 1_000_000, event.x or 0), spin(-1_000_000, 1_000_000, event.y or 0)
         self.dx, self.dy = spin(-1000, 1000, event.dx), spin(-1000, 1000, event.dy)
         self.delay = spin(0, 86400, event.delay, " s", 4)
-        for title, widget in (("Acción", self.kind), ("Tecla", self.key), ("Botón", self.button), ("Coordenadas X / Y", row(self.x, self.y)),
-                              ("Rueda horizontal / vertical", row(self.dx, self.dy)), ("Espera previa", self.delay)):
+        for title, widget in ((tr('Action'), self.kind), (tr('Key'), self.key), (tr('Button'), self.button), (tr('Coordinates X / Y'), row(self.x, self.y)),
+                              (tr('Horizontal / vertical scroll'), row(self.dx, self.dy)), (tr('Delay before action'), self.delay)):
             form.addRow(title, widget)
         layout.addLayout(form)
-        layout.addWidget(label("Las coordenadas usan píxeles físicos del escritorio. Una pulsación y su liberación son dos eventos.", "muted", True))
+        layout.addWidget(label(tr('Coordinates use physical desktop pixels. A key press and its release count as two events.'), "muted", True))
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
-        buttons.button(QDialogButtonBox.StandardButton.Save).setText("Guardar acción")
-        buttons.button(QDialogButtonBox.StandardButton.Cancel).setText("Cancelar")
+        buttons.button(QDialogButtonBox.StandardButton.Save).setText(tr('Save action'))
+        buttons.button(QDialogButtonBox.StandardButton.Cancel).setText(tr('Cancel'))
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
@@ -192,7 +193,7 @@ class EventDialog(QDialog):
                                       self.x.value() if pointer else None, self.y.value() if pointer else None,
                                       self.dx.value() if kind == "scroll" else 0, self.dy.value() if kind == "scroll" else 0).validate()
         except ValidationError as exc:
-            QMessageBox.warning(self, "Revisa la acción", str(exc))
+            QMessageBox.warning(self, tr('Check the action'), str(exc))
             return
         super().accept()
 
@@ -204,28 +205,28 @@ class Editor(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.model = EventModel()
         self.table = EventTable(self.model)
-        add = button("Añadir acción", symbol="plus")
+        add = button(tr('Add action'), symbol="plus")
         additions = QMenu(add)
-        for text, callback in (("Acción individual", self.add), ("Pausa", self.add_wait),
-                               ("Combinación de teclas", self.add_chord), ("Texto", self.add_text),
-                               ("Clic, doble clic o arrastre", self.add_pointer)):
+        for text, callback in ((tr('Single action'), self.add), (tr('Wait'), self.add_wait),
+                               (tr('Key combination'), self.add_chord), (tr('Text'), self.add_text),
+                               (tr('Click, double-click or drag'), self.add_pointer)):
             additions.addAction(text, callback)
         add.setMenu(additions)
-        undo, redo = button("Deshacer", self.model.history.undo), button("Rehacer", self.model.history.redo)
+        undo, redo = button(tr('Undo'), self.model.history.undo), button(tr('Redo'), self.model.history.redo)
         self.model.history.canUndoChanged.connect(undo.setEnabled)
         self.model.history.canRedoChanged.connect(redo.setEnabled)
         undo.setEnabled(False)
         redo.setEnabled(False)
         self.controls = row(add, None, undo, redo)
         layout.addWidget(self.controls)
-        more = button("Más")
+        more = button(tr('More'))
         operations = QMenu(more)
-        for text, callback in (("Duplicar selección", self.duplicate), ("Copiar", self.copy), ("Pegar", self.paste),
-                               ("Mover antes", lambda: self.move(-1)), ("Mover después", lambda: self.move(1))):
+        for text, callback in ((tr('Duplicate selection'), self.duplicate), (tr('Copy'), self.copy), (tr('Paste'), self.paste),
+                               (tr('Move up'), lambda: self.move(-1)), (tr('Move down'), lambda: self.move(1))):
             operations.addAction(text, callback)
         more.setMenu(operations)
-        self.operations = row(button("Editar acción", self.edit_selected), button("Eliminar", self.delete), more, None)
-        self.view_mode = combo([("Bloques", 0), ("Detalle", 1)])
+        self.operations = row(button(tr('Edit action'), self.edit_selected), button(tr('Delete'), self.delete), more, None)
+        self.view_mode = combo([(tr('Blocks'), 0), (tr('Details'), 1)])
         self.operations.layout().addWidget(self.view_mode)
         layout.addWidget(self.operations)
         self.visual = QListView()
@@ -247,10 +248,10 @@ class Editor(QWidget):
         self.views.addWidget(self.table)
         self.view_mode.currentIndexChanged.connect(self.views.setCurrentIndex)
         layout.addWidget(self.views, 1)
-        self.empty = label("Tu secuencia empieza aquí.\nAñade una acción o graba desde la pestaña Grabar.", "emptyState", True)
+        self.empty = label(tr('Your sequence starts here.\nAdd an action or record from the Record tab.'), "emptyState", True)
         self.empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.empty)
-        self.summary = label("0 eventos · 0.000 s", "muted")
+        self.summary = label(tr('0 events · 0.000 s'), "muted")
         layout.addWidget(self.summary)
         self.model.changed.connect(self.refresh_summary)
         self.model.modelReset.connect(self.refresh_summary)
@@ -272,7 +273,7 @@ class Editor(QWidget):
             shortcut.setEnabled(editable)
 
     def refresh_summary(self):
-        self.summary.setText(f"{len(self.model.events):,} acciones · {sum(e.delay for e in self.model.events):g} s · ↓ Pulsar  ↑ Soltar")
+        self.summary.setText(tr('{0:,} actions · {1:g} s · ↓ Press  ↑ Release', len(self.model.events), sum((e.delay for e in self.model.events))))
         self.empty.setVisible(not self.model.events)
         self.views.setVisible(bool(self.model.events))
 
@@ -281,13 +282,13 @@ class Editor(QWidget):
         if selected:
             self.edit(selected[0])
 
-    def insert(self, events, description="Insertar eventos"):
+    def insert(self, events, description=tr('Insert events')):
         selected = self.table.selected_rows()
         index = selected[-1] + 1 if selected else len(self.model.events)
         try:
             self.model.update(self.model.events[:index] + events + self.model.events[index:], description)
         except ValidationError as exc:
-            QMessageBox.warning(self, "No se pudo insertar", str(exc))
+            QMessageBox.warning(self, tr('Could not insert'), str(exc))
 
     def add(self):
         dialog = EventDialog(parent=self)
@@ -301,62 +302,62 @@ class Editor(QWidget):
         if dialog.exec():
             events = list(self.model.events)
             events[index] = dialog.result_event
-            self.model.update(events, "Editar evento")
+            self.model.update(events, tr('Edit event'))
 
     def add_wait(self):
-        value, ok = QInputDialog.getDouble(self, "Insertar pausa", "Duración (segundos)", 1, 0, 86400, 4)
+        value, ok = QInputDialog.getDouble(self, tr('Insert delay'), tr('Duration (seconds)'), 1, 0, 86400, 4)
         if ok:
-            self.insert([Event("wait", value)], "Insertar pausa")
+            self.insert([Event("wait", value)], tr('Insert delay'))
 
     def add_chord(self):
-        text, ok = QInputDialog.getText(self, "Combinación de teclas", "Ejemplo: ctrl_l+c, shift_l+a, alt_l+tab")
+        text, ok = QInputDialog.getText(self, tr('Key combination'), tr('Example: ctrl_l+c, shift_l+a, alt_l+tab'))
         if not ok:
             return
         try:
             keys = [normalize_key(part.strip()) for part in text.split("+")]
             if len(keys) > 10:
-                raise ValidationError("Máximo 10 teclas por combinación.")
+                raise ValidationError(tr('A combination can contain up to 10 keys.'))
             events = [Event("key_down", 0.03, key=k) for k in keys]
             events += [Event("key_up", 0.03, key=k) for k in reversed(keys)]
-            self.insert(events, "Insertar combinación")
+            self.insert(events, tr('Insert key combination'))
         except ValidationError as exc:
-            QMessageBox.warning(self, "Combinación inválida", str(exc))
+            QMessageBox.warning(self, tr('Invalid combination'), str(exc))
 
     def add_text(self):
         dialog = QDialog(self)
-        dialog.setWindowTitle("Insertar texto")
+        dialog.setWindowTitle(tr('Insert text'))
         layout = QVBoxLayout(dialog)
-        layout.addWidget(label("El texto se convertirá en pulsaciones editables. No incluyas contraseñas.", "muted", True))
+        layout.addWidget(label(tr('Text will be converted to editable keystrokes. Do not include passwords.'), "muted", True))
         text = QPlainTextEdit()
         layout.addWidget(text)
-        enter = QCheckBox("Pulsar Enter al terminar")
+        enter = QCheckBox(tr('Press Enter at the end'))
         layout.addWidget(enter)
-        layout.addWidget(button("Insertar", dialog.accept, primary=True))
+        layout.addWidget(button(tr('Insert'), dialog.accept, primary=True))
         if dialog.exec():
             value = text.toPlainText()
             if len(value) > 10000:
-                QMessageBox.warning(self, "Texto demasiado largo", "Máximo 10 000 caracteres.")
+                QMessageBox.warning(self, tr('Text too long'), tr('Up to 10,000 characters.'))
                 return
             events = []
             for char in value + ("\n" if enter.isChecked() else ""):
                 key = {"\n": "key:enter", "\t": "key:tab"}.get(char, "char:" + char)
                 events.extend((Event("key_down", 0.025, key=key), Event("key_up", key=key)))
-            self.insert(events, "Insertar texto")
+            self.insert(events, tr('Insert text'))
 
     def add_pointer(self):
         dialog = QDialog(self)
-        dialog.setWindowTitle("Clic, doble clic o arrastre")
+        dialog.setWindowTitle(tr('Click, double-click or drag'))
         form = QFormLayout(dialog)
-        kind = combo([("Clic", "click"), ("Doble clic", "double"), ("Arrastrar y soltar", "drag")])
-        btn = combo([("Izquierdo", "left"), ("Derecho", "right"), ("Central", "middle"), ("Lateral X1", "x1"), ("Lateral X2", "x2")])
+        kind = combo([(tr('Click'), "click"), (tr('Double-click'), "double"), (tr('Drag and drop'), "drag")])
+        btn = combo([(tr('Left'), "left"), (tr('Right'), "right"), (tr('Middle'), "middle"), (tr('Side button X1'), "x1"), (tr('Side button X2'), "x2")])
         x1, y1, x2, y2 = (spin(-1_000_000, 1_000_000, value) for value in (100, 100, 300, 300))
         duration = spin(0.05, 600, 0.5, " s", 3)
-        form.addRow("Acción", kind)
-        form.addRow("Botón", btn)
-        form.addRow("Origen X / Y", row(x1, y1))
-        form.addRow("Destino del arrastre X / Y", row(x2, y2))
-        form.addRow("Duración del arrastre", duration)
-        form.addRow(button("Insertar", dialog.accept, primary=True))
+        form.addRow(tr('Action'), kind)
+        form.addRow(tr('Button'), btn)
+        form.addRow(tr('Start X / Y'), row(x1, y1))
+        form.addRow(tr('Drag destination X / Y'), row(x2, y2))
+        form.addRow(tr('Drag duration'), duration)
+        form.addRow(button(tr('Insert'), dialog.accept, primary=True))
         if dialog.exec():
             events = [Event("mouse_down", button=btn.currentData(), x=x1.value(), y=y1.value())]
             if kind.currentData() == "drag":
@@ -369,17 +370,17 @@ class Editor(QWidget):
                 events.append(Event("mouse_up", 0.04, button=btn.currentData(), x=x1.value(), y=y1.value()))
                 if kind.currentData() == "double":
                     events += [replace(events[0], delay=0.05), events[1]]
-            self.insert(events, "Insertar acción de ratón")
+            self.insert(events, tr('Insert mouse action'))
 
     def duplicate(self):
         selected = self.table.selected_rows()
         if selected:
-            self.insert([self.model.events[i] for i in selected], "Duplicar eventos")
+            self.insert([self.model.events[i] for i in selected], tr('Duplicate events'))
 
     def delete(self):
         selected = set(self.table.selected_rows())
         if selected:
-            self.model.update([e for i, e in enumerate(self.model.events) if i not in selected], "Eliminar eventos")
+            self.model.update([e for i, e in enumerate(self.model.events) if i not in selected], tr('Delete events'))
 
     def move(self, direction):
         selected = self.table.selected_rows()
@@ -401,10 +402,10 @@ class Editor(QWidget):
         try:
             raw = bytes(mime.data("application/x-macroflow-events"))
             if len(raw) > 32 * 1024 * 1024:
-                raise ValidationError("Secuencia demasiado grande.")
+                raise ValidationError(tr('Sequence too large.'))
             data = json.loads(raw)
             if not isinstance(data, list) or len(data) > MAX_EVENTS:
-                raise ValidationError("Secuencia inválida.")
-            self.insert([Event.from_dict(event) for event in data], "Pegar eventos")
+                raise ValidationError(tr('Invalid sequence.'))
+            self.insert([Event.from_dict(event) for event in data], tr('Paste events'))
         except (ValueError, TypeError, RecursionError):
-            QMessageBox.warning(self, "Portapapeles inválido", "No se pudo leer la secuencia de eventos.")
+            QMessageBox.warning(self, tr('Invalid clipboard contents'), tr('Could not read the event sequence.'))

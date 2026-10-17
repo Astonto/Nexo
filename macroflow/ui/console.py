@@ -1,3 +1,4 @@
+from ..i18n import tr
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QCheckBox, QGridLayout, QProgressBar, QVBoxLayout, QWidget
 
@@ -40,47 +41,47 @@ class Console(QWidget):
 
         recorder, content = card()
         recorder.setMinimumHeight(400)
-        self.record_state = label("EN ESPERA", "muted")
-        content.addWidget(row(glyph("record"), label("Grabador", "sectionTitle"), None, self.record_state))
+        self.record_state = label(tr('IDLE'), "muted")
+        content.addWidget(row(glyph("record"), label(tr('Recorder'), "sectionTitle"), None, self.record_state))
         self.timer = label("00:00.000", "consoleTimer")
         self.timer.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.count = label("0 acciones registradas", "muted")
+        self.count = label(tr('0 recorded actions'), "muted")
         self.count.setAlignment(Qt.AlignmentFlag.AlignCenter)
         content.addWidget(self.timer)
         content.addWidget(self.count)
-        self.moves = QCheckBox("Capturar movimientos del ratón")
+        self.moves = QCheckBox(tr('Capture mouse movements'))
         content.addWidget(self.moves)
-        self.mode = combo([("Tiempo real", "timed"), ("Pulsaciones · intervalo fijo", "fixed")])
+        self.mode = combo([(tr('Real time'), "timed"), (tr('Keystrokes · fixed interval'), "fixed")])
         content.addWidget(self.mode)
         self.countdown = spin(0, 30, 3, " s")
-        content.addWidget(row(label("Cuenta regresiva", "muted"), None, self.countdown))
-        self.record = button("Iniciar grabación", owner.start_recording, symbol="record", primary=True)
-        self.record_stop = button("Detener", owner.stop_task, symbol="stop")
+        content.addWidget(row(label(tr('Countdown'), "muted"), None, self.countdown))
+        self.record = button(tr('Start recording'), owner.start_recording, symbol="record", primary=True)
+        self.record_stop = button(tr('Stop'), owner.stop_task, symbol="stop")
         for item in (self.record, self.record_stop):
             item.setStyleSheet("padding:9px 8px; font-size:12px;")
         content.addWidget(row(self.record, self.record_stop))
-        self.target = label("Se guardará en la macro seleccionada.", "muted", True)
+        self.target = label(tr('This recording will be saved to the selected macro.'), "muted", True)
         content.addWidget(self.target)
-        content.addWidget(button("Opciones de grabación", lambda: owner.change_page(1)))
+        content.addWidget(button(tr('Recording options'), lambda: owner.change_page(1)))
         grid.addWidget(recorder, 0, 0)
 
         player, content = card()
-        self.play_state = label("REPRODUCTOR", "muted")
-        self.progress_text = label("Sin reproducción activa", "muted")
+        self.play_state = label(tr('PLAYER'), "muted")
+        self.progress_text = label(tr('Nothing playing'), "muted")
         controls, controls_layout = card()
         controls_layout.setContentsMargins(12, 10, 12, 10)
         controls_layout.setSpacing(8)
         controls_layout.addWidget(row(glyph("play", 14), self.play_state, None, self.progress_text))
-        self.previous = button("Anterior", lambda: owner.engine.seek(-1))
-        self.pause = button("Pausar", owner.pause_task)
-        self.next = button("Siguiente", lambda: owner.engine.seek(1))
-        self.restart = button("Reiniciar", lambda: owner.engine.seek(restart=True))
-        self.stop = button("Detener", owner.stop_task, symbol="stop")
+        self.previous = button(tr('Previous'), lambda: owner.engine.seek(-1))
+        self.pause = button(tr('Pause'), owner.pause_task)
+        self.next = button(tr('Next'), lambda: owner.engine.seek(1))
+        self.restart = button(tr('Restart'), lambda: owner.engine.seek(restart=True))
+        self.stop = button(tr('Stop'), owner.stop_task, symbol="stop")
         for widget in (self.previous, self.pause, self.next, self.restart, self.stop):
             widget.setStyleSheet("padding:7px 10px;")
         controls_layout.addWidget(row(self.previous, self.pause, self.next, self.restart, self.stop))
         content.addWidget(controls)
-        self.name = label("Selecciona una macro", "pageTitle", True)
+        self.name = label(tr('Select a macro'), "pageTitle", True)
         self.shortcut = label("", "keycap")
         self.elapsed = label("00:00.000", "muted")
         content.addWidget(row(self.name, self.shortcut, None, self.elapsed))
@@ -89,7 +90,7 @@ class Console(QWidget):
         self.progress.setValue(0)
         self.progress.setTextVisible(False)
         content.addWidget(self.progress)
-        self.action = label("Añade o graba acciones para comenzar.", "currentAction", True)
+        self.action = label(tr('Add or record actions to get started.'), "currentAction", True)
         self.action.setMinimumHeight(78)
         content.addWidget(self.action)
         self.following = label("", "muted", True)
@@ -97,25 +98,25 @@ class Console(QWidget):
         content.addStretch()
         self.parameters = label("", "muted", True)
         content.addWidget(self.parameters)
-        self.play = button("Reproducir", owner.start_playback, primary=True, symbol="play")
-        content.addWidget(row(self.play, button("Opciones", lambda: owner.change_page(2)), None))
+        self.play = button(tr('Play'), owner.start_playback, primary=True, symbol="play")
+        content.addWidget(row(self.play, button(tr('Options'), lambda: owner.change_page(2)), None))
         grid.addWidget(player, 0, 1, 1, 2)
 
-        shortcuts, content = card("Controles de grabación")
+        shortcuts, content = card(tr('Recording controls'))
         shortcuts.setMinimumHeight(280)
         self.shortcuts = {}
-        for key, name in (("record_start", "Iniciar"), ("record_stop", "Detener"), ("record_pause", "Pausar")):
+        for key, name in (("record_start", tr('Start')), ("record_stop", tr('Stop')), ("record_pause", tr('Pause'))):
             value = label("", "keycap")
             self.shortcuts[key] = value
             content.addWidget(row(label(name, "muted"), None, value))
         content.addStretch()
-        content.addWidget(label("Los atajos de control no se guardan en la grabación.", "muted", True))
-        content.addWidget(button("Configurar controles", lambda: owner.change_page(6), symbol="settings"))
+        content.addWidget(label(tr('Control shortcuts are excluded from recordings.'), "muted", True))
+        content.addWidget(button(tr('Configure controls'), lambda: owner.change_page(6), symbol="settings"))
         grid.addWidget(shortcuts, 1, 0)
 
         quick, content = card()
-        content.addWidget(row(label("Acceso rápido", "sectionTitle"), None,
-                              button("Ver todas", lambda: owner.change_page(5))))
+        content.addWidget(row(label(tr('Quick access'), "sectionTitle"), None,
+                              button(tr('View all'), lambda: owner.change_page(5))))
         self.quick = QVBoxLayout()
         self.quick.setSpacing(12)
         content.addLayout(self.quick)
@@ -125,19 +126,19 @@ class Console(QWidget):
         grid.addWidget(quick, 1, 1)
 
         clicker, content = card()
-        self.click_state = label("DETENIDO", "muted")
+        self.click_state = label(tr('STOPPED'), "muted")
         content.addWidget(row(glyph("click"), label("Autoclicker", "sectionTitle"), None, self.click_state))
-        self.click_kind = combo([("Ratón", "mouse"), ("Teclado", "keyboard")])
-        self.click_target = label("Izquierdo", "muted")
+        self.click_kind = combo([(tr('Mouse'), "mouse"), (tr('Keyboard'), "keyboard")])
+        self.click_target = label(tr('Left'), "muted")
         content.addWidget(row(self.click_kind, self.click_target))
         self.interval = spin(10, 90000000, 100, " ms")
         self.repetitions = spin(0, 10000000, 100)
-        self.repetitions.setSpecialValueText("Sin límite")
-        content.addWidget(row(label("Intervalo", "muted"), None, self.interval))
-        content.addWidget(row(label("Repeticiones", "muted"), None, self.repetitions))
-        content.addWidget(button("Configurar tecla / ratón", lambda: owner.change_page(3)))
+        self.repetitions.setSpecialValueText(tr('Unlimited'))
+        content.addWidget(row(label(tr('Interval'), "muted"), None, self.interval))
+        content.addWidget(row(label(tr('Repeats'), "muted"), None, self.repetitions))
+        content.addWidget(button(tr('Assign key / mouse button'), lambda: owner.change_page(3)))
         content.addStretch()
-        self.click = button("Iniciar autoclicker", owner.start_clicker, symbol="play")
+        self.click = button(tr('Start autoclicker'), owner.start_clicker, symbol="play")
         content.addWidget(self.click)
         grid.addWidget(clicker, 1, 2)
 
@@ -184,7 +185,7 @@ class Console(QWidget):
     def update_settings(self):
         for action, field in self.shortcuts.items():
             field.setText(display_binding(self.owner.settings.data["hotkeys"][action]))
-        self.policy.setText("Si otra macro está activa: " + ("poner en cola." if self.owner.settings.data["concurrency"] == "queue" else "bloquear la segunda."))
+        self.policy.setText(tr('If another macro is running: ') + (tr('queue it.') if self.owner.settings.data["concurrency"] == "queue" else tr('block the second macro.')))
 
     def update_library(self):
         while self.quick.count():
@@ -195,11 +196,11 @@ class Console(QWidget):
             name = label(macro.name, wrap=True)
             play = button("", lambda checked=False, identifier=macro.id: self.play_macro(identifier), symbol="play")
             play.setFixedWidth(38)
-            play.setToolTip("Reproducir " + macro.name)
+            play.setToolTip(tr('Play ') + macro.name)
             play.setEnabled(not self.owner.engine.busy)
             self.quick.addWidget(row(trigger, name, None, play))
         if not macros:
-            self.quick.addWidget(label("Crea tu primera macro desde Nueva.", "muted", True))
+            self.quick.addWidget(label(tr('Create your first macro with New.'), "muted", True))
 
     def play_macro(self, identifier):
         if self.owner.require_idle():
@@ -209,7 +210,7 @@ class Console(QWidget):
     def update_progress(self, data):
         self.index = min(data["index"], data["total"] - 1)
         self.progress.setValue(round(data["index"] / data["total"] * 100))
-        self.progress_text.setText(f"{min(data['index'] + 1, data['total'])} / {data['total']} acciones")
+        self.progress_text.setText(tr('{0} / {1} actions', min(data['index'] + 1, data['total']), data['total']))
         self.elapsed.setText(duration_text(data["elapsed"])[3:])
         self.refresh_action()
 
@@ -219,14 +220,14 @@ class Console(QWidget):
         if not macro:
             return
         self.name.setText(macro.name)
-        self.shortcut.setText(display_binding(macro.trigger) or "Sin atajo")
-        self.parameters.setText(f"Velocidad  {macro.speed:g}×    Repeticiones  {macro.repetitions}    Modo  " + {"once": "Una pulsación", "hold": "Mantener", "toggle": "Alternar"}[macro.activation])
+        self.shortcut.setText(display_binding(macro.trigger) or tr('No shortcut'))
+        self.parameters.setText(tr('Speed  {0:g}×    Repeats  {1}    Mode  ', macro.speed, macro.repetitions) + {"once": tr('Single press'), "hold": tr('Hold'), "toggle": tr('Toggle')}[macro.activation])
         index = self.index if o.engine.task == "play" else 0
         if macro.events and index < len(macro.events):
             self.action.setText(f"{index + 1:02}     {event_text(macro.events[index])}")
-            self.following.setText("SIGUIENTE     " + event_text(macro.events[index + 1]) if index + 1 < len(macro.events) else "Fin de la secuencia")
+            self.following.setText(tr('NEXT     ') + event_text(macro.events[index + 1]) if index + 1 < len(macro.events) else tr('End of sequence'))
         else:
-            self.action.setText("Añade o graba acciones para comenzar.")
+            self.action.setText(tr('Add or record actions to get started.'))
             self.following.setText("")
 
     def sync(self):
@@ -234,19 +235,19 @@ class Console(QWidget):
         busy, task, phase = o.engine.busy, o.engine.task, o.engine.phase
         self.record.setEnabled(not busy)
         self.record_stop.setEnabled(task == "record")
-        self.record_state.setText("GRABANDO" if task == "record" else "EN ESPERA")
+        self.record_state.setText(tr('RECORDING') if task == "record" else tr('IDLE'))
         self.play.setEnabled(not busy and o.current is not None and bool(o.current.events))
-        self.play_state.setText("EN PAUSA" if phase == "paused" else "REPRODUCIENDO" if task == "play" else "REPRODUCTOR")
-        self.pause.setText("Reanudar" if phase == "paused" else "Pausar")
+        self.play_state.setText(tr('PAUSED') if phase == "paused" else tr('PLAYING') if task == "play" else tr('PLAYER'))
+        self.pause.setText(tr('Resume') if phase == "paused" else tr('Pause'))
         for widget in (self.previous, self.pause, self.next, self.restart):
             widget.setEnabled(task == "play" and phase in ("running", "paused"))
         self.stop.setEnabled(task == "play")
         self.click.setEnabled(not busy or task == "click")
-        self.click.setText("Detener autoclicker" if task == "click" else "Iniciar autoclicker")
-        self.click_state.setText("EN CURSO" if task == "click" else "DETENIDO")
+        self.click.setText(tr('Stop autoclicker') if task == "click" else tr('Start autoclicker'))
+        self.click_state.setText(tr('RUNNING') if task == "click" else tr('STOPPED'))
         for widget in (self.moves, self.mode, self.countdown, self.interval, self.repetitions, self.click_kind):
             widget.setEnabled(not busy)
         self.moves.setEnabled(not busy and self.mode.currentData() == "timed")
         self.click_target.setText(display_binding(o.repeat_key.text()) if o.click_kind.currentData() == "keyboard" else o.click_button.currentText())
-        self.target.setText("Se guardará en «" + o.current.name + "»." if o.current else "Se creará una macro para esta grabación.")
+        self.target.setText(tr('Will be saved to “{0}”.', o.current.name) if o.current else tr('A new macro will be created for this recording.'))
         self.refresh_action()

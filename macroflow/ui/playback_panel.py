@@ -1,4 +1,5 @@
 from __future__ import annotations
+from ..i18n import tr
 
 from PySide6.QtCore import QEvent, QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen, QPolygonF
@@ -48,7 +49,7 @@ class PlaybackDetail(QWidget):
     def __init__(self):
         super().__init__()
         self.progress = None
-        self.fallback = "Preparando…"
+        self.fallback = tr('Getting ready…')
         self.setFixedHeight(16)
 
     def sizeHint(self):
@@ -61,12 +62,12 @@ class PlaybackDetail(QWidget):
     def text(self):
         if self.progress:
             position, total, iterations, elapsed = self.progress
-            return f"{position} / {total} · {iterations} rep. completadas · {elapsed}"
+            return tr('{0} / {1} · {2} completed repeats · {3}', position, total, iterations, elapsed)
         return self.fallback
 
     def set_progress(self, position, total, iterations, elapsed):
         self.progress = position, total, iterations, elapsed
-        self.setToolTip(f"Acciones completadas: {position} de {total} · Repeticiones completadas: {iterations} · Tiempo: {elapsed}")
+        self.setToolTip(tr('Completed actions: {0} of {1} · Completed repeats: {2} · Time: {3}', position, total, iterations, elapsed))
         self.update()
 
     def paintEvent(self, event):
@@ -94,7 +95,7 @@ class PlaybackDetail(QWidget):
         painter.restore()
         painter.setPen(QColor("#a8a9ae"))
         x += 18
-        text(f"{iterations} hechas")
+        text(tr('{0} done', iterations))
         text("·")
         painter.setPen(QPen(QColor("#a8a9ae"), 1.2, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
         painter.setBrush(Qt.BrushStyle.NoBrush)
@@ -161,7 +162,7 @@ class PlaybackControl(QPushButton):
                                             QPointF(center.x() - 10, center.y() + 13),
                                             QPointF(center.x() + 8, center.y())]))
         elif self.kind == "pause":
-            if self.text() == "Reanudar":
+            if self.text() == tr('Resume'):
                 painter.drawPolygon(QPolygonF([QPointF(center.x() - 8, center.y() - 14),
                                                 QPointF(center.x() - 8, center.y() + 14),
                                                 QPointF(center.x() + 14, center.y())]))
@@ -193,8 +194,8 @@ class PlaybackPanel(QWidget):
                          Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowDoesNotAcceptFocus)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setWindowTitle("Nexo · Reproducción")
-        self.setAccessibleName("Panel flotante de reproducción")
+        self.setWindowTitle(tr('Nexo · Playback'))
+        self.setAccessibleName(tr('Floating playback panel'))
         self.setFixedSize(450, 75)
         self.screen_bounds = ScreenBounds(self)
         self.setCursor(Qt.CursorShape.OpenHandCursor)
@@ -215,7 +216,7 @@ class PlaybackPanel(QWidget):
         information = QVBoxLayout()
         information.setContentsMargins(0, 0, 0, 0)
         information.setSpacing(0)
-        self.title = QLabel("REPRODUCIENDO")
+        self.title = QLabel(tr('PLAYING'))
         self.title.setFont(QFont("Inter", 7, QFont.Weight.Medium))
         self.title.setStyleSheet("color:#929398; letter-spacing:1px;")
         self.macro_name = MacroName("")
@@ -230,21 +231,21 @@ class PlaybackPanel(QWidget):
         self.separator.setFixedSize(1, 30)
         self.separator.setStyleSheet("background:#343539;")
         root.addWidget(self.separator, 0, Qt.AlignmentFlag.AlignVCenter)
-        self.previous = PlaybackControl("previous", "Acción anterior", self.previous_requested.emit)
-        self.pause = PlaybackControl("pause", "Pausar", self.pause_requested.emit)
-        self.next = PlaybackControl("next", "Acción siguiente", self.next_requested.emit)
-        self.restart = PlaybackControl("restart", "Reiniciar macro", self.restart_requested.emit)
-        self.stop = PlaybackControl("stop", "Detener reproducción", self.stop_requested.emit, stop=True)
-        self.previous.setToolTip("Volver a la acción anterior de esta macro")
-        self.next.setToolTip("Saltar a la siguiente acción de esta macro")
-        self.restart.setToolTip("Volver al inicio y reiniciar el contador de repeticiones")
+        self.previous = PlaybackControl("previous", tr('Previous action'), self.previous_requested.emit)
+        self.pause = PlaybackControl("pause", tr('Pause'), self.pause_requested.emit)
+        self.next = PlaybackControl("next", tr('Next action'), self.next_requested.emit)
+        self.restart = PlaybackControl("restart", tr('Restart macro'), self.restart_requested.emit)
+        self.stop = PlaybackControl("stop", tr('Stop playback'), self.stop_requested.emit, stop=True)
+        self.previous.setToolTip(tr('Go back to the previous action in this macro'))
+        self.next.setToolTip(tr('Skip to the next action in this macro'))
+        self.restart.setToolTip(tr('Return to the start and reset the repeat counter'))
         for control in (self.previous, self.pause, self.next, self.restart, self.stop):
             root.addWidget(control)
         self.drag_targets = (self.dot, self.title, self.macro_name, self.detail, self.separator)
         for target in self.drag_targets:
             target.installEventFilter(self)
             target.setCursor(Qt.CursorShape.OpenHandCursor)
-        self.update_phase("running", "Macro actual")
+        self.update_phase("running", tr('Current macro'))
         screen = QApplication.primaryScreen().availableGeometry()
         self.move(screen.right() - self.width() - 18, screen.top() + 18)
 
@@ -317,14 +318,14 @@ class PlaybackPanel(QWidget):
         paused = phase == "paused"
         accent = PAUSED if paused else accent_color(self).name()
         self.progress_accent = accent
-        titles = {"countdown": "PREPARANDO", "running": "REPRODUCIENDO",
-                  "paused": "EN PAUSA", "stopping": "DETENIENDO"}
-        self.title.setText(titles.get(phase, "REPRODUCCIÓN"))
+        titles = {"countdown": tr('GETTING READY'), "running": tr('PLAYING'),
+                  "paused": tr('PAUSED'), "stopping": tr('STOPPING')}
+        self.title.setText(titles.get(phase, tr('PLAYBACK')))
         self.macro_name.set_name(name)
         self.dot.setStyleSheet(f"background:{accent}; border-radius:4px;")
-        self.pause.setText("Reanudar" if paused else "Pausar")
-        self.pause.setAccessibleName("Reanudar" if paused else "Pausar")
-        self.pause.setToolTip("Reanudar reproducción" if paused else "Pausar reproducción")
+        self.pause.setText(tr('Resume') if paused else tr('Pause'))
+        self.pause.setAccessibleName(tr('Resume') if paused else tr('Pause'))
+        self.pause.setToolTip(tr('Resume playback') if paused else tr('Pause playback'))
         self.pause.set_emphasis(phase in ("running", "paused"), accent)
         for item in (self.previous, self.next, self.restart, self.pause):
             item.setEnabled(phase in ("running", "paused"))

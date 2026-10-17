@@ -1,3 +1,4 @@
+from .i18n import tr
 
 import getpass
 import os
@@ -35,7 +36,7 @@ class SingleInstance(QObject):
                 QLocalServer.removeServer(self.name)
                 if not self.server.listen(self.name):
                     self.lock.unlock()
-                    raise RuntimeError('No se pudo crear el control de instancia única.')
+                    raise RuntimeError(tr('Could not create the single-instance control.'))
                 return True
             if os.name == 'nt':
 
@@ -49,7 +50,7 @@ class SingleInstance(QObject):
                 socket.disconnectFromServer()
                 return False
             if time.monotonic() >= deadline:
-                raise RuntimeError('Nexo sigue iniciándose. Vuelve a abrirlo en unos segundos.')
+                raise RuntimeError(tr('Nexo is still starting. Open it again in a few seconds.'))
             time.sleep(.05)
 
     def drain(self):

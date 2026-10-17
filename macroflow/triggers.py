@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .i18n import tr
 
 import ctypes
 import os
@@ -53,12 +54,12 @@ def layout_character(key, layout):
 
 
 def key_label(key):
-    mouse_names = {'mbutton': 'Botón central', 'mouseleft': 'Botón izquierdo', 'mouseright': 'Botón derecho'}
+    mouse_names = {'mbutton': tr('Middle mouse button'), 'mouseleft': tr('Left mouse button'), 'mouseright': tr('Right mouse button')}
     if key in mouse_names:
         return mouse_names[key]
     if key in MOD_VKS:
         return MOD_VKS[key]
-    labels = {0x1B: "Esc", 0x2E: "Supr", 0x2D: "Insert", 0x2C: "Impr Pant", 0x14: "Bloq Mayús"}
+    labels = {0x1B: "Esc", 0x2E: tr('Del'), 0x2D: "Insert", 0x2C: tr('Print Screen'), 0x14: tr('Caps Lock')}
     if key in labels:
         return labels[key]
     if isinstance(key, int) and (0xBA <= key <= 0xE2 or 0x60 <= key <= 0x6F) and os.name == "nt":
@@ -89,7 +90,7 @@ def display_binding(text):
 
 def parse_binding(text, *, allow_reserved=False):
     if not isinstance(text, str) or len(text) > 80:
-        raise ValidationError("Atajo inválido.")
+        raise ValidationError(tr('Invalid shortcut.'))
 
 
     parts = [p.strip().lower() for p in text.split("+")]
@@ -98,7 +99,7 @@ def parse_binding(text, *, allow_reserved=False):
     mods = []
     for p in parts[:-1]:
         if p.capitalize() not in MOD_ORDER or p.capitalize() in mods:
-            raise ValidationError("Atajo inválido. Ejemplos: A, F6, Ctrl+G o X1.")
+            raise ValidationError(tr('Invalid shortcut. Examples: A, F6, Ctrl+G or X1.'))
         mods.append(p.capitalize())
     last = parts[-1]
     if last in ("x1", "x2", "mbutton", "mouseleft", "mouseright"):
@@ -110,35 +111,35 @@ def parse_binding(text, *, allow_reserved=False):
     elif last.startswith("vk") and last[2:].isdigit() and 1 <= int(last[2:]) <= 254:
         key = int(last[2:])
         if key in MOD_VKS:
-            raise ValidationError("Añade una tecla al modificador.")
+            raise ValidationError(tr('Add a key to the modifier.'))
     elif len(last) == 1 and ord(last) >= 32 and os.name == "nt":
         scan_key = ctypes.windll.user32.VkKeyScanW
         scan_key.argtypes = [ctypes.c_wchar]
         scan_key.restype = ctypes.c_short
         code = scan_key(last)
         if code == -1:
-            raise ValidationError("Pulsa Asignar y usa la tecla física de tu teclado.")
+            raise ValidationError(tr('Press Assign and use the physical key on your keyboard.'))
         key = code & 255
         for bit, modifier in ((1, "Shift"), (2, "Ctrl"), (4, "Alt")):
             if (code >> 8) & bit and modifier not in mods:
                 mods.append(modifier)
     else:
-        raise ValidationError("Usa A–Z, 0–9, F1–F24, Pause, una tecla de navegación, X1 o X2.")
+        raise ValidationError(tr('Use A–Z, 0–9, F1–F24, Pause, a navigation key, X1 or X2.'))
     binding = Binding(frozenset(mods), key)
     if not allow_reserved and (key == 0x7B or ("Win" in mods) or (key == 0x2E and {"Ctrl", "Alt"}.issubset(mods)) or (key == 0x09 and "Alt" in mods)):
-        raise ValidationError("Ese atajo está reservado por Windows. Elige otro activador.")
+        raise ValidationError(tr('That shortcut is reserved by Windows. Choose another trigger.'))
     return binding
 
 
 def validate_bindings(macros, controls):
-    seen = {parse_binding(value): "control global" for value in controls.values()}
+    seen = {parse_binding(value): tr('global control') for value in controls.values()}
     for macro in macros:
         if not macro.trigger:
             continue
         binding = parse_binding(macro.trigger)
         if binding in seen:
-            raise ValidationError(f"Atajo {binding.label} en conflicto con {seen[binding]}.")
-        seen[binding] = f"otra macro ({macro.name})"
+            raise ValidationError(tr('Shortcut {0} conflicts with {1}.', binding.label, seen[binding]))
+        seen[binding] = tr('another macro ({0})', macro.name)
 
 
 def check_os_binding(text):
@@ -149,7 +150,7 @@ def check_os_binding(text):
     from .hotkeys import MODIFIERS
     mods = sum(MODIFIERS[m.lower()] for m in binding.modifiers)
     if not ctypes.windll.user32.RegisterHotKey(None, 0x6F00, mods | 0x4000, binding.key):
-        raise ValidationError(f"{binding.label} está registrado por Windows u otra aplicación.")
+        raise ValidationError(tr('{0} is registered by Windows or another application.', binding.label))
     ctypes.windll.user32.UnregisterHotKey(None, 0x6F00)
 
 

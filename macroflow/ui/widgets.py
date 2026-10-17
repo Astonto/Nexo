@@ -1,3 +1,4 @@
+from ..i18n import tr
 from PySide6.QtCore import Qt, QTimer, QElapsedTimer, QEvent, QPointF, QRectF, QRect, QVariantAnimation, QEasingCurve, QObject
 from PySide6.QtGui import QPainter, QPainterPath, QLinearGradient, QColor, QFont, QPen, QIcon, QBrush, QPalette
 from PySide6.QtWidgets import (QComboBox, QCompleter, QListView, QDoubleSpinBox, QFrame, QHBoxLayout, QLabel,
@@ -89,7 +90,7 @@ class LockSwitch(QPushButton):
         self.setCheckable(True)
         self.setFixedSize(42, 27)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setAccessibleName('Bloquear Nexo')
+        self.setAccessibleName(tr('Lock Nexo'))
         self.position = 0.0
         self.motion = QVariantAnimation(self)
         self.motion.setDuration(200)
@@ -97,14 +98,14 @@ class LockSwitch(QPushButton):
         self.motion.valueChanged.connect(self.advance)
         self.toggled.connect(self.animate)
         self.toggled.connect(callback)
-        self.setToolTip('Bloquear Nexo: desactivado')
+        self.setToolTip(tr('Lock Nexo: off'))
 
     def advance(self, value):
         self.position = float(value)
         self.update()
 
     def animate(self, checked):
-        self.setToolTip('Bloquear Nexo: activado' if checked else 'Bloquear Nexo: desactivado')
+        self.setToolTip(tr('Lock Nexo: on') if checked else tr('Lock Nexo: off'))
         self.motion.stop()
         self.motion.setStartValue(self.position)
         self.motion.setEndValue(1.0 if checked else 0.0)
@@ -474,7 +475,7 @@ class CategoryField(Dropdown):
         self.addItems(sorted(names.values(), key=str.casefold))
         self.setEditText(current)
         self.lineEdit().setMaxLength(80)
-        self.lineEdit().setPlaceholderText('Escribe o selecciona una categoría')
+        self.lineEdit().setPlaceholderText(tr('Type or select a category'))
         self.lineEdit().setStyleSheet('QLineEdit{background:transparent;border:0;padding:0;font-size:14px;font-weight:650;}')
         completer = self.completer()
         completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
@@ -484,8 +485,8 @@ class CategoryField(Dropdown):
         completer.popup().setObjectName('categorySuggestions')
         popup = completer.popup()
         popup.setParent(self, popup.windowFlags())
-        self.setToolTip('Elige una categoría o escribe una nueva; se guarda con la macro.')
-        self.setAccessibleName('Categoría de la macro')
+        self.setToolTip(tr('Choose a category or type a new one; it is saved with the macro.'))
+        self.setAccessibleName(tr('Macro category'))
 
     def text(self):
         value = self.currentText().strip()

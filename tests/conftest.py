@@ -1,4 +1,5 @@
 import os
+os.environ.setdefault("NEXO_LANGUAGE", "es")
 import sys
 from pathlib import Path
 
