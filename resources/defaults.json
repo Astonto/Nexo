@@ -1,0 +1,76 @@
+{
+  "theme": "dark",
+  "accent": "#ff1744",
+  "language": "es",
+  "countdown": 3,
+  "speed": 1.0,
+  "macro_folder": "",
+  "minimize": "keep",
+  "minimize_on_close": true,
+  "confirm_delete": true,
+  "capture_moves": false,
+  "hotkeys": {
+    "record_start": "Ctrl+Alt+F6",
+    "record_stop": "Ctrl+Alt+F5",
+    "record_pause": "Ctrl+Alt+F7",
+    "play": "Ctrl+Alt+F8",
+    "stop": "Ctrl+Alt+F9",
+    "click": "Ctrl+Alt+F10",
+    "emergency": "Pause"
+  },
+  "last_macro": "",
+  "window_size": [
+    1240,
+    820
+  ],
+  "concurrency": "block",
+  "record_mode": "timed",
+  "fixed_interval": 1.0,
+  "sidebar_collapsed": false,
+  "clicker": {
+    "kind": "mouse",
+    "button": "left",
+    "double": false,
+    "position": "current",
+    "x": 0,
+    "y": 0,
+    "key": "V",
+    "hours": 0,
+    "minutes": 0,
+    "seconds": 0,
+    "milliseconds": 100,
+    "variable": false,
+    "interval_max": 0.5,
+    "repetitions": 100,
+    "infinite": false,
+    "duration": 0.0,
+    "countdown": 3,
+    "hold_button": "",
+    "ignore_ctrl": false,
+    "ignore_alt": false,
+    "ignore_shift": false,
+    "ignore_win": false
+  },
+  "excluded_keys": [
+    {
+      "key": 27,
+      "enabled": true
+    },
+    {
+      "key": 46,
+      "enabled": true
+    },
+    {
+      "key": 44,
+      "enabled": true
+    },
+    {
+      "key": 45,
+      "enabled": true
+    },
+    {
+      "key": 20,
+      "enabled": true
+    }
+  ]
+}
